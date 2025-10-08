@@ -1,0 +1,182 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\StoreUsuarioRequest;
+use App\Http\Requests\UpdateUsuarioRequest;
+use App\Models\Usuario;
+use Auth;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use PhpParser\Node\Stmt\TryCatch;
+
+class UsuarioController extends Controller
+{
+    function __construct()
+    {
+        $this->middleware('permission:ver-usuario|crear-usuario|editar-usuario|eliminar-usuario', ['only' => ['index']]);
+        $this->middleware('permission:crear-usuario', ['only' => ['create', 'store']]);
+        $this->middleware('permission:editar-usuario', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:eliminar-usuario', ['only' => ['destroy']]);
+    }
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        $users = Usuario::all();
+        return view('Usuarios.index', compact('users'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $usuario = Auth::user();
+
+        if ($usuario->hasRole('ADMINISTRADOR')) {
+            $roles = Role::all(); // Puede asignar todos
+        } elseif ($usuario->hasRole('RECEPCIONISTA')) {
+            $roles = Role::whereIn('name', ['CLIENTE', 'INSTRUCTOR'])->get(); // Solo estos dos
+        } else {
+            abort(403, 'No tienes permiso para registrar usuarios.');
+        }
+
+        return view('Usuarios.create', compact('roles'));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(StoreUsuarioRequest $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $request->merge([
+                'password' => Hash::make($request->password),
+                'fecha_registro' => now(),
+            ]);
+
+            $user = Usuario::create($request->all());
+
+            if ($request->hasFile('foto')) {
+                $user->guardarFoto($request->file('foto'));
+            }
+
+            $user->assignRole($request->rol);
+
+            DB::commit();
+            return redirect()->route('usuarios.index')->with('success', 'Usuario Registrado');
+        } catch (Exception $e) {
+            DB::rollBack();
+            return redirect()->route('usuarios.index')->with('error', 'Error al registrar: ' . $e->getMessage());
+        }
+    }
+
+
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id) {}
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Usuario $usuario)
+    {
+        $user = Auth::user();
+        $rolUsuario = $usuario->getRoleNames()->first();
+
+        if ($user->hasRole('RECEPCIONISTA') && !in_array($rolUsuario, ['CLIENTE', 'INSTRUCTOR'])) {
+            abort(403, 'No tienes permiso para editar este usuario.');
+        }
+
+        if ($user->hasRole('ADMINISTRADOR')) {
+            $roles = Role::all();
+        } elseif ($user->hasRole('RECEPCIONISTA')) {
+            $roles = Role::whereIn('name', ['CLIENTE', 'INSTRUCTOR'])->get();
+        } else {
+            abort(403, 'No tienes permiso para editar usuarios.');
+        }
+
+        return view('Usuarios.edit', compact('usuario', 'roles'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UpdateUsuarioRequest $request, Usuario $usuario)
+    {
+        $user = Auth::user();
+        $rolUsuario = $usuario->getRoleNames()->first();
+
+        if ($user->hasRole('RECEPCIONISTA') && !in_array($rolUsuario, ['CLIENTE', 'INSTRUCTOR'])) {
+            abort(403, 'No tienes permiso para actualizar este usuario.');
+        }
+        try {
+            DB::beginTransaction();
+
+            $data = $request->all();
+
+            // Comprobar el password y aplicar hash
+            if (!empty($data['password'])) {
+                $data['password'] = Hash::make($data['password']);
+            } else {
+                unset($data['password']); // si está vacío, no actualizar
+            }
+            // Si se subió una nueva foto, reemplazarla antes de actualizar el modelo
+            if ($request->hasFile('foto')) {
+                $usuario->guardarFoto($request->file('foto'));
+                unset($data['foto']); // evita que el campo se sobrescriba en el update
+            }
+
+            // Actualizar usuario
+            $usuario->update($data);
+
+
+
+            // Actualizar rol
+            $usuario->syncRoles([$data['rol']]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('usuarios.index')
+                ->with('error', 'Error al actualizar el usuario: ' . $e->getMessage());
+        }
+
+        return redirect()->route('usuarios.index')->with('success', 'Usuario Editado');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        $usuario = Usuario::find($id);
+        $user = Auth::user();
+        //elimina rol
+        $rolUsuario = $usuario->getRoleNames()->first();
+        //condicional para que el recepcionista no pueda eliminar usuarios que no sean cliente o instructor
+        if ($user->hasRole('RECEPCIONISTA') && !in_array($rolUsuario, ['CLIENTE', 'INSTRUCTOR'])) {
+            abort(403, 'No tienes permiso para eliminar este usuario.');
+        }
+        $usuario->removeRole($rolUsuario);
+
+        // Eliminar foto del storage
+        $usuario->eliminarFoto();
+
+        //elimina usuario
+        $usuario->delete();
+
+        //Usuario::where('id', $id)->delete();
+        return redirect()->route('usuarios.index')->with('success', 'Usuario eliminado');
+    }
+}
