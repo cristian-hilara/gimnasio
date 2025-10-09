@@ -38,14 +38,14 @@
                                     <a class="nav-link" href="{{route('clientes.index')}}">Cliente</a>
                                     @endcan
                                     @can('ver-recepcionista')
-                                    <a class="nav-link" href="{{route('recepcionista.index')}}">Recepcionista</a>
+                                    <a class="nav-link" href="{{route('recepcionistas.index')}}">Recepcionista</a>
                                     @endcan
                                     @can('ver-administrador')
                                     <a class="nav-link" href="{{route('administrador.index')}}">Administrador</a>
                                     @endcan
 
                                     @can('ver-instructor')
-                                    <a class="nav-link" href="{{route('instructores.index')}}">Instructor</a>
+                                    <a class="nav-link" href="{{route('instructors.index')}}">Instructor</a>
                                     @endcan
 
                                 </nav>

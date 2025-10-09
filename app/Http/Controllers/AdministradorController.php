@@ -6,6 +6,7 @@ use App\Http\Requests\StoreAdministradorRequest;
 use App\Http\Requests\UpdateAdministradorRequest;
 use App\Models\Administrador;
 use App\Models\Usuario;
+use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -18,14 +19,25 @@ class AdministradorController extends Controller
 
     public function dashboard()
     {
-        return view('panel.index');
+        if (!Auth::user()->hasRole('ADMINISTRADOR')) {
+            abort(403, 'Acceso no autorizado');
+        }
+
+        $administrador = Administrador::where('usuario_id', Auth::user()->id)->first();
+
+        if (!$administrador) {
+            return redirect()->route('errors.administrador_no_registrado')
+                ->with('warning', 'Aún no estás registrado como administrador.');
+        }
+
+        return view('panel.index', compact('administrador'));
     }
+
 
     public function index()
     {
 
-        $admin = Administrador::all();
-
+        $admin = Administrador::with('usuario')->get();
         return view('administradores.index', compact('admin'));
     }
 

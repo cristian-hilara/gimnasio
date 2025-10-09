@@ -107,13 +107,22 @@
                                 </a>
                                 @endif
 
-                                {{-- Botón de eliminar --}}
+                               
                                 @can('eliminar-usuario')
+                                @php
+                                $estaVinculado = $item->cliente || $item->recepcionista || $item->administrador || $item->instructor;
+                                @endphp
+
                                 @if($rolActual === 'ADMINISTRADOR' || ($rolActual === 'RECEPCIONISTA' && in_array($rolItem, ['CLIENTE', 'INSTRUCTOR'])))
-                                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmModal-{{ $item->id }}">
+                                <button class="btn btn-sm {{ $estaVinculado ? 'btn-secondary' : 'btn-danger' }}"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="{{ $estaVinculado ? '' : '#confirmModal-' . $item->id }}"
+                                    title="{{ $estaVinculado ? 'Usuario vinculado, no se puede eliminar' : 'Eliminar usuario' }}"
+                                    {{ $estaVinculado ? 'disabled' : '' }}>
                                     <i class="fas fa-trash"></i>
                                 </button>
                                 @endif
+
                                 @endcan
                             </div>
                         </td>

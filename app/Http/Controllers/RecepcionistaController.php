@@ -40,11 +40,8 @@ class RecepcionistaController extends Controller
     {
         // Carga todos los recepcionistas con sus datos de usuario asociados
 
-        $usuario = Usuario::all();
-        $recepcionistas = Recepcionista::all();
-
-
-        return view('recepcionistas.index', compact('recepcionistas', 'usuario'));
+        $recepcionistas = Recepcionista::with('usuario')->get();
+        return view('recepcionistas.index', compact('recepcionistas'));
     }
 
 
@@ -78,10 +75,10 @@ class RecepcionistaController extends Controller
         try {
             DB::beginTransaction();
 
-            
 
 
-           Recepcionista::create([
+
+            Recepcionista::create([
                 'usuario_id' => $request->usuario_id,
                 'turno' => $request->turno,
                 'estado' => $request->estado,
@@ -120,13 +117,7 @@ class RecepcionistaController extends Controller
      */
     public function edit(Recepcionista $recepcionista)
     {
-        $usuarios = Usuario::whereNotIn('id', function ($query) use ($recepcionista) {
-            $query->select('usuario_id')
-                ->from('recepcionistas')
-                ->where('id', '!=', $recepcionista->id);
-        })->get();
-
-        return view('recepcionistas.edit', compact('recepcionista', 'usuarios'));
+        return view('recepcionistas.edit', compact('recepcionista'));
     }
 
     /**
@@ -136,22 +127,16 @@ class RecepcionistaController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(UpdateRecepcionistaRequest $request,Recepcionista $recepcionista)
+    public function update(UpdateRecepcionistaRequest $request, Recepcionista $recepcionista)
     {
-
-
-        $recepcionista = Recepcionista::with('usuario')->findOrFail($recepcionista);
-
 
         try {
             DB::beginTransaction();
-
 
             $recepcionista->update([
                 'turno' => $request->turno,
                 'estado' => $request->estado,
             ]);
-
 
             DB::commit();
 
@@ -180,7 +165,7 @@ class RecepcionistaController extends Controller
             $recepcionista = Recepcionista::findOrFail($id);
             $recepcionista->delete();
 
-            
+
 
             DB::commit();
 

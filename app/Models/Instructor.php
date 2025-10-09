@@ -10,15 +10,21 @@ class Instructor extends Model
 {
     protected $table = 'instructors';
     protected $primaryKey = 'id';
-    public $incrementing = false;
+    public $incrementing = true;
     //protected $keyType = 'int';
-    protected $fillable = ['id', 'especialidad', 'experiencia', 'estado'];
+    protected $fillable = [
+        'id',
+        'especialidad',
+        'experiencia',
+        'estado',
+        'usuario_id'
+    ];
 
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
-        public function usuario()
+    public function usuario()
     {
         return $this->belongsTo(Usuario::class, 'usuario_id', 'id');
     }

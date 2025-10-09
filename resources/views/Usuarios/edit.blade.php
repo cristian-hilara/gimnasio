@@ -109,21 +109,28 @@
                     @endif
                 </div>
 
-                <!-- Rol -->
+                @php
+                $estaVinculado = $usuario->cliente || $usuario->recepcionista || $usuario->administrador || $usuario->instructor;
+                @endphp
+
                 <div class="col-md-6">
                     <label for="rol" class="form-label">Seleccionar Rol</label>
-                    <select name="rol" id="rol" class="form-select">
+                    <select name="rol" id="rol" class="form-select" {{ $estaVinculado ? 'disabled' : '' }}>
                         @foreach ($roles as $item)
-                        <option value="{{$item->name}}" @selected(old('rol', $usuario->roles->pluck('name')->first()) == $item->name)>
-                            {{$item->name}}
+                        <option value="{{ $item->name }}"
+                            @selected(old('rol', $usuario->roles->pluck('name')->first()) == $item->name)>
+                            {{ $item->name }}
                         </option>
                         @endforeach
                     </select>
-                    <div class="form-text">Seleccione el rol del usuario.</div>
+                    <div class="form-text">
+                        {{ $estaVinculado ? 'Este usuario ya está registrado en otro módulo. No se puede cambiar el rol.' : 'Seleccione el rol del usuario.' }}
+                    </div>
                     @error('rol')
-                    <small class="text-danger">{{'*'.$message}}</small>
+                    <small class="text-danger">{{ '*' . $message }}</small>
                     @enderror
                 </div>
+
                 <!-- Estado -->
                 <div class="col-md-6">
                     <label for="estado" class="form-label">Estado</label>

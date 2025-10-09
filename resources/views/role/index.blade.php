@@ -64,16 +64,36 @@
                 <tbody>
                     @foreach ($roles as $item)
                     <tr>
-                        <td>{{ $item->name }}</td>
+
                         <td>
+                            {{ $item->name }}
+                            @if($item->users()->exists())
+                            <span class="badge bg-secondary ms-2">
+                                <i class="fas fa-user-lock"></i> En uso
+                            </span>
+                            @endif
+                        </td>
+                        <td>
+                            @php
+                            $rolEnUso = $item->users()->exists();
+                            @endphp
+
                             <div class="btn-group" role="group" aria-label="Acciones">
                                 <form action="{{ route('roles.edit', ['role' => $item]) }}" method="get" style="display:inline;">
                                     <button type="submit" class="btn btn-warning">Editar</button>
                                 </form>
+
+                                @if(!$rolEnUso)
                                 <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmModal-{{ $item->id }}">
                                     Eliminar
                                 </button>
+                                @else
+                                <button type="button" class="btn btn-secondary" disabled title="Este rol está asignado a usuarios">
+                                    <i class="fas fa-lock"></i> En uso
+                                </button>
+                                @endif
                             </div>
+
                         </td>
                     </tr>
                     @endforeach

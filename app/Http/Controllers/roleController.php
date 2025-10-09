@@ -10,11 +10,12 @@ use Illuminate\Support\Facades\DB;
 
 class roleController extends Controller
 {
-    function __construct() {
-        $this->middleware('permission:ver-role|crear-role|editar-role|eliminar-role', ['only'=> ['index']]);
-        $this->middleware('permission:crear-role',['only'=>['create','store']]);
-        $this->middleware('permission:editar-role',['only'=>['edit','update']]);
-        $this->middleware('permission:eliminar-role',['only'=>['destroy']]);
+    function __construct()
+    {
+        $this->middleware('permission:ver-role|crear-role|editar-role|eliminar-role', ['only' => ['index']]);
+        $this->middleware('permission:crear-role', ['only' => ['create', 'store']]);
+        $this->middleware('permission:editar-role', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:eliminar-role', ['only' => ['destroy']]);
     }
     /**
      * 
@@ -55,8 +56,8 @@ class roleController extends Controller
             ]);
 
             //asignar permisos
-            
-            $rol->syncPermissions(array_map(fn($val)=>(int)$val, $request->input('permission')));
+
+            $rol->syncPermissions(array_map(fn($val) => (int)$val, $request->input('permission')));
 
             DB::commit();
         } catch (Exception $e) {
@@ -80,7 +81,7 @@ class roleController extends Controller
     public function edit(Role $role)
     {
         $permisos = Permission::all();
-        return view('role.edit',compact('role', 'permisos'));
+        return view('role.edit', compact('role', 'permisos'));
     }
 
     /**
@@ -89,35 +90,53 @@ class roleController extends Controller
     public function update(Request $request, Role $role)
     {
         $request->validate([
-            'name' => 'required|unique:roles,name,' .$role->id,
+            'name' => 'required|unique:roles,name,' . $role->id,
             'permission' => 'required'
         ]);
 
         try {
             DB::beginTransaction();
-            //actualizar el rol
-            $rol = Role::where('id', $role->id)
-                ->update([
+
+            // Verificar si el rol está asignado a usuarios
+            $tieneUsuarios = $role->users()->exists();
+
+            // Solo actualizar el nombre si no está asignado
+            if (!$tieneUsuarios) {
+                $role->update([
                     'name' => $request->name
                 ]);
+            }
 
-            //actualizar permmisos
-            $role->syncPermissions(array_map(fn($val)=>(int)$val, $request->input('permission')));
+            // Actualizar permisos
+            $role->syncPermissions(array_map(fn($val) => (int)$val, $request->input('permission')));
 
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
+            return redirect()->route('roles.index')
+                ->with('error', 'Error al actualizar el rol: ' . $e->getMessage());
         }
-        return redirect()->route('roles.index')->with('success', 'Rol editado');
+
+        return redirect()->route('roles.index')->with('success', 'Rol editado correctamente.');
     }
+
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
     {
-        Role::where('id', $id)->delete();
+        $role = Role::findOrFail($id);
 
-        return redirect()->route('roles.index')->with('success', 'Rol eliminado');
+        // Verificar si el rol está asignado a usuarios
+        if ($role->users()->exists()) {
+            return redirect()->route('roles.index')
+                ->with('error', 'No se puede eliminar este rol porque está asignado a uno o más usuarios.');
+        }
+
+        $role->delete();
+
+        return redirect()->route('roles.index')
+            ->with('success', 'Rol eliminado correctamente.');
     }
 }

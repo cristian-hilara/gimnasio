@@ -5,8 +5,8 @@
     </div>
     @endif
 
-    <h4>Perfil de recepcionista no encontrado</h4>
-    <p>Tu cuenta tiene el rol de recepcionista, pero aún no está vinculada a un perfil registrado.
+    <h4>Perfil de administrador no encontrado</h4>
+    <p>Tu cuenta tiene el rol de administrador, pero aún no está vinculada a un perfil registrado.
         Xfavor vaya con administracion para completar su registro.
     </p>
 

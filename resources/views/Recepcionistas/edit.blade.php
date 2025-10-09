@@ -12,7 +12,7 @@
 
     <div class="card shadow-sm mb-4">
         <div class="card-header card-header-custom">
-            Edición de Recepcionista: 
+            Edición de Recepcionista:
         </div>
         <div class="card-body">
             <form action="{{ route('recepcionistas.update', $recepcionista->id) }}" method="POST" enctype="multipart/form-data">
@@ -23,28 +23,21 @@
                 <h5 class="mb-3 text-primary"><i class="fas fa-briefcase"></i> Datos del Recepcionista</h5>
 
 
-                <!--usuario recepcionista-->
-                <!-- Selección de Usuario -->
-                <div class="col-md-12 mb-4">
-                    <label for="usuario_id" class="form-label">
-                        <i class="fas fa-user"></i> Cambiar Usuario *
-                    </label>
-                    <select name="usuario_id" id="usuario_id"
-                        class="form-select @error('usuario_id') is-invalid @enderror" required>
-                        <option value="{{$recepcionista->usuario_id}}" selected>
-                            {{$recepcionista->usuario->nombre}} {{$recepcionista->usuario->apellido}} - {{$recepcionista->usuario->email}}
-                        </option>
-                        @foreach($usuarios as $usuario)
-                        <option value="{{$usuario->id}}"
-                            {{ old('usuario_id') == $usuario->id ? 'selected' : '' }}>
-                            {{$usuario->nombre}} {{$usuario->apellido}} - {{$usuario->email}}
-                        </option>
-                        @endforeach
-                    </select>
-                    @error('usuario_id')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                <div class="col-md-12 mb-4 d-flex align-items-center gap-3">
+                    <img src="{{ asset('storage/' . $recepcionista->usuario->foto) }}"
+                        alt="Foto de {{ $recepcionista->usuario->nombre }}"
+                        class="rounded-circle" width="50" height="50">
+                    <div>
+                        <label class="form-label">
+                            <i class="fas fa-user"></i> Usuario asociado
+                        </label>
+                        <input type="text" class="form-control"
+                            style="width: 200%; max-width: 600px;"
+                            value="{{ $recepcionista->usuario->nombre }} {{ $recepcionista->usuario->apellido }} - {{ $recepcionista->usuario->email }}"
+                            readonly>
+                    </div>
                 </div>
+
                 <div class="row g-3">
                     <!-- Campo de Turno -->
                     <div class="col-md-6">

@@ -73,14 +73,13 @@ Route::prefix('administrador')->middleware('auth')->group(function () {
     Route::get('/buscar-usuarios', [AdministradorController::class, 'buscarUsuarios'])->name('buscar.usuarios');
 });
 
-// Rutas adicionales
-Route::get('/recepcionista', [RecepcionistaController::class, 'index'])->name('recepcionista.index')->middleware('auth');
+
 
 
 // Rutas de Clientes
 Route::resource('clientes', ClienteController::class);
 //Rutas instructores
-Route::resource('instructores', InstructorController::class);
+Route::resource('instructors', InstructorController::class);
 //tutas recepcionista
 Route::resource('recepcionistas', RecepcionistaController::class);
 

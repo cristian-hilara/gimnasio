@@ -14,16 +14,21 @@ class InstructorController extends Controller
     /**
      * Display a listing of the resource.
      */
+
     public function dashboard()
     {
         if (!Auth::user()->hasRole('INSTRUCTOR')) {
             abort(403, 'Acceso no autorizado');
         }
 
-        $instructor = Instructor::where('usuario_id', Auth::user()->id)->firstOrFail();
+        $instructor = Instructor::where('usuario_id', Auth::user()->id)->first();
+
+        if (!$instructor) {
+            return redirect()->route('errors.instructor_no_registrado')
+                ->with('warning', 'Tu perfil de instructor aún no está registrado.');
+        }
 
         return view('panel.panel_instructor', compact('instructor'));
-        
     }
 
     public function index()
@@ -37,13 +42,13 @@ class InstructorController extends Controller
      */
     public function create()
     {
-        // Obtener usuarios que NO tienen su ID en la columna 'usuario_id' de la tabla 'instructors'
-        $usuarios = Usuario::whereNotIn('id', function ($query) {
-            // ASUMO que la columna de la clave foránea en la tabla 'instructors' es 'usuario_id'
-            $query->select('usuario_id')->from('instructors');
-        })->get();
+        $usuarios = Usuario::role('INSTRUCTOR')
+            ->whereNotIn('id', function ($query) {
+                $query->select('usuario_id')->from('instructors');
+            })
+            ->get();
 
-        return view('Instructores.create', compact('usuarios'));
+        return view('instructores.create', compact('usuarios'));
     }
 
 
@@ -61,7 +66,11 @@ class InstructorController extends Controller
         ], [
             'usuario_id.required' => 'Debe seleccionar un usuario',
             'usuario_id.unique' => 'Este usuario ya es instructor',
-            // ... (otros mensajes)
+            'especialidad.string' => 'La especialidad debe ser una cadena de texto',
+            'especialidad.max' => 'La especialidad no debe exceder los 100 caracteres',
+            'experiencia.string' => 'La experiencia debe ser una cadena de texto',
+            'experiencia.max' => 'La experiencia no debe exceder los 100 caracteres',
+            'estado.required' => 'El estado es obligatorio'
         ]);
 
         try {
@@ -77,7 +86,7 @@ class InstructorController extends Controller
             $instructor->save();
             DB::commit();
 
-            return redirect()->route('instructores.index')->with('success', 'Instructor registrado exitosamente');
+            return redirect()->route('instructors.index')->with('success', 'Instructor registrado exitosamente');
         } catch (\Exception $e) {
             // ... (manejo de error)
         }
@@ -96,16 +105,7 @@ class InstructorController extends Controller
      */
     public function edit(Instructor $instructor)
     {
-        // Obtener todos los usuarios que aún no son instructores, MÁS el usuario actual que sí lo es.
-        $usuarios = Usuario::whereNotIn('id', function ($query) use ($instructor) {
-            // Usar 'usuario_id'
-            $query->select('usuario_id')
-                ->from('instructors')
-                // Ignorar el usuario_id actual del instructor que se edita
-                ->where('usuario_id', '!=', $instructor->usuario_id);
-        })->orWhere('id', $instructor->usuario_id)->get(); // Incluir el usuario actual
-
-        return view('instructores.edit', compact('instructor', 'usuarios'));
+        return view('instructores.edit', compact('instructor'));
     }
 
     /**
@@ -114,26 +114,22 @@ class InstructorController extends Controller
     public function update(Request $request, Instructor $instructor)
     {
         $request->validate([
-            // La clave foránea es 'usuario_id'. Debe ser única, ignorando el usuario_id actual.
-            'usuario_id' => [
-                'required',
-                'exists:usuarios,id',
-                Rule::unique('instructors', 'usuario_id')->ignore($instructor->id), // Ignora por la PK del instructor (id de la tabla instructors)
-            ],
+            
             'especialidad' => 'nullable|string|max:100',
             'experiencia' => 'nullable|string|max:100',
             'estado' => 'required|in:activo,inactivo'
         ], [
             'usuario_id.required' => 'Debe seleccionar un usuario',
             'usuario_id.unique' => 'Este usuario ya es instructor',
-            // ... (otros mensajes)
+            'especialidad.string' => 'La especialidad debe ser una cadena de texto',
+            'especialidad.max' => 'La especialidad no debe exceder los 100 caracteres',
+            'experiencia.string' => 'La experiencia debe ser una cadena de texto',
+            'experiencia.max' => 'La experiencia no debe exceder los 100 caracteres',
+            'estado.required' => 'El estado es obligatorio'
         ]);
 
         try {
             DB::beginTransaction();
-
-            // ASIGNAR a la columna correcta: usuario_id
-            $instructor->usuario_id = $request->usuario_id;
             $instructor->especialidad = $request->especialidad;
             $instructor->experiencia = $request->experiencia;
             $instructor->estado = $request->estado;
@@ -141,7 +137,7 @@ class InstructorController extends Controller
             $instructor->save();
             DB::commit();
 
-            return redirect()->route('instructores.index')->with('success', 'Instructor actualizado exitosamente');
+            return redirect()->route('instructors.index')->with('success', 'Instructor actualizado exitosamente');
         } catch (\Exception $e) {
             // ... (manejo de error)
         }

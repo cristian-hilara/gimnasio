@@ -15,7 +15,7 @@
 
 @section('content')
 <div class="container-fluid px-4">
-    <h1 class="mt-4">Nuevo Cliente</h1>
+    <h1 class="mt-4"><i class="fas fa-user-plus"></i> Crear Nuevo Cliente</h1>
     <ol class="breadcrumb mb-4">
         <li class="breadcrumb-item"><a href="{{route('clientes.index')}}">Clientes</a></li>
         <li class="breadcrumb-item active">Crear Cliente</li>

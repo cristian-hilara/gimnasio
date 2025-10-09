@@ -23,13 +23,14 @@
 @include('components.success-message')
 
 <div class="container-fluid px-4">
-    <h1 class="mt-4">Instructores</h1>
+    <h1 class="mt-4"><i class="fas fa-dumbbell"></i></i> Instructores de Baile Fit</h1>
+
     <ol class="breadcrumb mb-4">
         <li class="breadcrumb-item active">Registro de Instructores</li>
     </ol>
 
     <div class="mb-4">
-        <a href="{{route('instructores.create')}}" class="btn btn-primary">
+        <a href="{{route('instructors.create')}}" class="btn btn-primary">
             <i class="fas fa-user-plus"></i> Añadir Nuevo Instructor
         </a>
     </div>
@@ -109,19 +110,21 @@
                             </span>
                             @endif
                         </td>
-                        <td>{{ $instructor->created_at->format('d/m/Y') }}</td>
+                        <td>
+                            {{ \Carbon\Carbon::parse($instructor->created_at)->format('d/m/Y') }}
+                        </td>
                         <td>
                             <div class="btn-group" role="group">
-                                <button class="btn btn-info btn-sm" onclick="viewInstructor({{ $instructor->id }})"
-                                    title="Ver detalles">
+                                <button class="btn btn-info btn-sm"onclick="showInstructorModal({{ $instructor->id }})" title="Ver detalles">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <a href="{{ route('instructores.edit', $instructor->id) }}"
+
+                                <a href="{{ route('instructors.edit', $instructor->id) }}"
                                     class="btn btn-warning btn-sm"
                                     title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button class="btn btn-danger btn-sm" onclick="deleteInstructor({{ $instructor->id }})"
+                                <button class="btn btn-danger btn-sm"onclick="deleteInstructor({{ $instructor->id }})"
                                     title="Eliminar">
                                     <i class="fas fa-trash"></i>
                                 </button>
@@ -138,35 +141,30 @@
                         </td>
                     </tr>
                     @endforelse
+
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
-<!-- Modal para Ver Instructor -->
-<div class="modal fade" id="viewInstructorModal" tabindex="-1" aria-labelledby="viewInstructorModalLabel" aria-hidden="true">
+<!-- Modal: Ver Instructor -->
+<div class="modal fade" id="instructorModal" tabindex="-1" aria-labelledby="instructorModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
+        <div class="modal-content shadow">
             <div class="modal-header bg-info text-white">
-                <h5 class="modal-title" id="viewInstructorModalLabel">
-                    <i class="fas fa-user-circle me-2"></i> Detalles del Instructor
+                <h5 class="modal-title" id="instructorModalLabel">
+                    <i class="fas fa-user"></i> Detalles del Instructor
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <div class="modal-body" id="viewInstructorContent">
-                <div class="text-center">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Cargando...</span>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <div class="modal-body" id="instructorModalBody">
+                <!-- Contenido dinámico -->
             </div>
         </div>
     </div>
 </div>
+
 
 
 @endsection
@@ -190,9 +188,22 @@
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.colVis.min.js"></script>
 
 <script>
-    function viewInstructor(id) {
-        $('#viewInstructorModal').modal('show');
-        $('#viewInstructorContent').html(`
+    $(document).ready(function() {
+        $('#instructoresTable').DataTable({
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+            },
+            dom: 'Bfrtip',
+            buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+            order: [
+                [1, 'asc']
+            ]
+        });
+    });
+
+    function showInstructorModal(id) {
+        $('#instructorModal').modal('show');
+        $('#instructorModalBody').html(`
             <div class="text-center">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Cargando...</span>
@@ -201,59 +212,42 @@
         `);
 
         $.ajax({
-            url: `/instructores/${id}`,
-            type: 'GET',
+            url: `/instructors/${id}`,
+            method: 'GET',
             success: function(data) {
                 const usuario = data.usuario || {};
-                const foto = usuario.foto ? `/storage/${usuario.foto}` : '/img/default-avatar.png';
-                const nombre = usuario.nombre ?? 'Sin nombre';
-                const apellido = usuario.apellido ?? '';
-                const email = usuario.email ?? 'Sin correo';
-                const telefono = usuario.telefono ?? 'N/A';
-                const direccion = usuario.direccion ?? 'N/A';
-                const especialidad = data.especialidad ?? 'N/A';
-                const experiencia = data.experiencia ?? 'N/A';
-                const estado = data.estado ?? 'inactivo';
+                const fotoUrl = usuario.foto ? `/storage/${usuario.foto}` : '/img/default-avatar.png';
+
+                const estadoBadge = data.estado === 'activo' ?
+                    '<span class="badge bg-success">Activo</span>' :
+                    '<span class="badge bg-danger">Inactivo</span>';
+
+                const especialidad = data.especialidad ?? 'Sin especialidad';
+                const experiencia = data.experiencia ?? 'No especificada';
                 const fechaRegistro = new Date(data.created_at).toLocaleDateString('es-ES');
                 const fechaActualizacion = new Date(data.updated_at).toLocaleDateString('es-ES');
 
-                $('#viewInstructorContent').html(`
-                    <div class="text-center mb-4">
-                        <img src="${foto}" 
-                             alt="Foto de ${nombre} ${apellido}"
-                             class="rounded-circle"
-                             style="width: 120px; height: 120px; object-fit: cover; border: 5px solid #17a2b8;">
-                    </div>
-
+                $('#instructorModalBody').html(`
                     <div class="row">
-                        <div class="col-md-6">
-                            <h6 class="text-info"><i class="fas fa-user"></i> Información Personal</h6>
-                            <hr>
-                            <p><strong>Nombre:</strong> ${nombre} ${apellido}</p>
-                            <p><strong>Email:</strong> ${email}</p>
-                            <p><strong>Teléfono:</strong> ${telefono}</p>
-                            <p><strong>Dirección:</strong> ${direccion}</p>
+                        <div class="col-md-4 text-center">
+                            <img src="${fotoUrl}" 
+                                 alt="Foto de ${usuario.nombre ?? 'Instructor'}"
+                                 class="rounded-circle mb-3"
+                                 style="width: 120px; height: 120px; object-fit: cover; border: 5px solid #17a2b8;">
+                            <h5>${usuario.nombre ?? ''} ${usuario.apellido ?? ''}</h5>
+                            <p>${estadoBadge}</p>
                         </div>
-                        <div class="col-md-6">
-                            <h6 class="text-info"><i class="fas fa-briefcase"></i> Información Profesional</h6>
+                        <div class="col-md-8">
+                            <h6 class="text-info"><i class="fas fa-id-card"></i> Información Personal</h6>
                             <hr>
-                            <p><strong>Especialidad:</strong> 
-                                <span class="badge bg-primary">${especialidad}</span>
-                            </p>
-                            <p><strong>Experiencia:</strong> 
-                                <span class="badge bg-info">${experiencia}</span>
-                            </p>
-                            <p><strong>Estado:</strong> 
-                                <span class="badge ${estado === 'activo' ? 'bg-success' : 'bg-danger'}">
-                                    ${estado.charAt(0).toUpperCase() + estado.slice(1)}
-                                </span>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-12">
-                            <h6 class="text-info"><i class="fas fa-calendar"></i> Fechas</h6>
+                            <p><strong>Email:</strong> ${usuario.email ?? 'Sin correo'}</p>
+                            <p><strong>Teléfono:</strong> ${usuario.telefono ?? 'N/A'}</p>
+                            <p><strong>Dirección:</strong> ${usuario.direccion ?? 'N/A'}</p>
+
+                            <h6 class="text-info mt-4"><i class="fas fa-dumbbell"></i> Detalles del Instructor</h6>
                             <hr>
+                            <p><strong>Especialidad:</strong> <span class="badge bg-primary">${especialidad}</span></p>
+                            <p><strong>Experiencia:</strong> <span class="badge bg-info">${experiencia}</span></p>
                             <p><strong>Fecha de registro:</strong> ${fechaRegistro}</p>
                             <p><strong>Última actualización:</strong> ${fechaActualizacion}</p>
                         </div>
@@ -261,15 +255,16 @@
                 `);
             },
             error: function() {
-                $('#viewInstructorContent').html(`
+                $('#instructorModalBody').html(`
                     <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle"></i> Error al cargar la información del instructor
+                        <i class="fas fa-exclamation-triangle"></i> Error al cargar los datos del instructor.
                     </div>
                 `);
             }
         });
     }
 </script>
+
 
 
 @endpush

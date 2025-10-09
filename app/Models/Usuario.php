@@ -101,7 +101,7 @@ class Usuario extends Authenticatable
      */
     public function instructor()
     {
-        return $this->hasOne(Instructor::class, 'id', 'id');
+        return $this->hasOne(Instructor::class, 'usuario_id', 'id');
     }
 
     /**

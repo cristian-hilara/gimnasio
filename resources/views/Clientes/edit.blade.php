@@ -8,7 +8,7 @@
     }
 
     .card-header {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        background: linear-gradient(135deg, #246ddbff 0%, #3e05e9ff 100%);
         color: white;
     }
 </style>
@@ -16,7 +16,7 @@
 
 @section('content')
 <div class="container-fluid px-4">
-    <h1 class="mt-4">Editar Cliente</h1>
+    <h1 class="mt-4"><i class="fas fa-user-edit"></i> Editar Cliente</h1>
     <ol class="breadcrumb mb-4">
         <li class="breadcrumb-item"><a href="{{route('clientes.index')}}">Clientes</a></li>
         <li class="breadcrumb-item active">Editar Cliente</li>
@@ -42,15 +42,22 @@
                         </div>
                     </div>
 
-                    <!-- Usuario asociado (solo lectura) -->
-                    <div class="col-md-12 mb-4">
-                        <label class="form-label">
-                            <i class="fas fa-user"></i> Usuario asociado
-                        </label>
-                        <input type="text" class="form-control"
-                            value="{{ $cliente->usuario->nombre }} {{ $cliente->usuario->apellido }} - {{ $cliente->usuario->email }}"
-                            readonly>
+                    <!-- Usuario asociado (con foto) -->
+                    <div class="col-md-12 mb-4 d-flex align-items-center gap-3">
+                        <img src="{{ asset('storage/' . $cliente->usuario->foto) }}"
+                            alt="Foto de {{ $cliente->usuario->nombre }}"
+                            class="rounded-circle" width="50" height="50">
+                        <div class="flex-grow-1">
+                            <label class="form-label">
+                                <i class="fas fa-user"></i> Usuario asociado
+                            </label>
+                            <input type="text" class="form-control"
+                                style="max-width: 600px;"
+                                value="{{ $cliente->usuario->nombre }} {{ $cliente->usuario->apellido }} - {{ $cliente->usuario->email }}"
+                                readonly>
+                        </div>
                     </div>
+
 
                     <div class="row">
                         <!-- Peso -->

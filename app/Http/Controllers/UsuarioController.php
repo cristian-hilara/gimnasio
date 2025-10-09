@@ -120,6 +120,7 @@ class UsuarioController extends Controller
         if ($user->hasRole('RECEPCIONISTA') && !in_array($rolUsuario, ['CLIENTE', 'INSTRUCTOR'])) {
             abort(403, 'No tienes permiso para actualizar este usuario.');
         }
+
         try {
             DB::beginTransaction();
 
@@ -129,21 +130,28 @@ class UsuarioController extends Controller
             if (!empty($data['password'])) {
                 $data['password'] = Hash::make($data['password']);
             } else {
-                unset($data['password']); // si está vacío, no actualizar
+                unset($data['password']);
             }
-            // Si se subió una nueva foto, reemplazarla antes de actualizar el modelo
+
+            // Reemplazar foto si se subió
             if ($request->hasFile('foto')) {
                 $usuario->guardarFoto($request->file('foto'));
-                unset($data['foto']); // evita que el campo se sobrescriba en el update
+                unset($data['foto']);
             }
 
-            // Actualizar usuario
+            // Actualizar datos del usuario
             $usuario->update($data);
 
+            // Verificar si está vinculado a algún módulo
+            $estaVinculado = $usuario->cliente()->exists()
+                || $usuario->recepcionista()->exists()
+                || $usuario->administrador()->exists()
+                || $usuario->instructor()->exists();
 
-
-            // Actualizar rol
-            $usuario->syncRoles([$data['rol']]);
+            // Solo actualizar rol si no está vinculado
+            if (!$estaVinculado) {
+                $usuario->syncRoles([$data['rol']]);
+            }
 
             DB::commit();
         } catch (\Exception $e) {
@@ -152,7 +160,7 @@ class UsuarioController extends Controller
                 ->with('error', 'Error al actualizar el usuario: ' . $e->getMessage());
         }
 
-        return redirect()->route('usuarios.index')->with('success', 'Usuario Editado');
+        return redirect()->route('usuarios.index')->with('success', 'Usuario editado correctamente.');
     }
 
     /**
@@ -160,23 +168,34 @@ class UsuarioController extends Controller
      */
     public function destroy(string $id)
     {
-        $usuario = Usuario::find($id);
+        $usuario = Usuario::findOrFail($id);
         $user = Auth::user();
-        //elimina rol
+
+        // Verificar si el usuario está vinculado a algún módulo
+        $estaVinculado = $usuario->cliente()->exists()
+            || $usuario->recepcionista()->exists()
+            || $usuario->administrador()->exists()
+            || $usuario->instructor()->exists();
+
+        if ($estaVinculado) {
+            return redirect()->route('usuarios.index')
+                ->with('error', 'Este usuario está vinculado a otro módulo y no puede ser eliminado.');
+        }
+
+        // Restricción para recepcionistas
         $rolUsuario = $usuario->getRoleNames()->first();
-        //condicional para que el recepcionista no pueda eliminar usuarios que no sean cliente o instructor
         if ($user->hasRole('RECEPCIONISTA') && !in_array($rolUsuario, ['CLIENTE', 'INSTRUCTOR'])) {
             abort(403, 'No tienes permiso para eliminar este usuario.');
         }
-        $usuario->removeRole($rolUsuario);
 
-        // Eliminar foto del storage
+        // Eliminar rol y foto
+        $usuario->removeRole($rolUsuario);
         $usuario->eliminarFoto();
 
-        //elimina usuario
+        // Eliminar usuario
         $usuario->delete();
 
-        //Usuario::where('id', $id)->delete();
-        return redirect()->route('usuarios.index')->with('success', 'Usuario eliminado');
+        return redirect()->route('usuarios.index')
+            ->with('success', 'Usuario eliminado correctamente.');
     }
 }

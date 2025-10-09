@@ -15,23 +15,31 @@
 
     <div class="container w-100 border border-3 border-primary rounded p-4 mt-3">
         <form action="{{ route('roles.update', ['role'=>$role])}}" method="post">
-        @method('PATCH')    
-        @csrf
+            @method('PATCH')
+            @csrf
             <div class="row g-3">
 
-                <!----nombre del rol------>
+                @php
+                $tieneUsuarios = $role->users()->exists();
+                @endphp
+
                 <div class="row mb-4 mt-4">
                     <label for="name" class="col-sm-2 col-form-label">Nombre del rol</label>
                     <div class="row sm-4">
-                        <input type="text" name="name" id="name" class="form-control" value="{{old('name',$role->name)}}">
+                        <input type="text" name="name" id="name" class="form-control"
+                            value="{{ old('name', $role->name) }}"
+                            {{ $tieneUsuarios ? 'readonly style=background-color:#e9ecef;' : '' }}>
                     </div>
                     <div class="col-sm-6">
                         @error('name')
-                        <small class="text-danger">{{'*'.$message}}</small>
+                        <small class="text-danger">{{ '*' . $message }}</small>
                         @enderror
+                        @if($tieneUsuarios)
+                        <small class="text-muted"><i class="fas fa-lock"></i> Este rol está asignado a usuarios y no se puede renombrar.</small>
+                        @endif
                     </div>
-
                 </div>
+
                 <!--permisos-->
                 <div class="col-12 mb-4">
                     <label for="" class="form-label">Permisos para el rol:</label>
@@ -45,7 +53,7 @@
                     </div>
                     @else
                     <div class="form-check mb-2">
-                        <input  type="checkbox" name="permission[]" id="{{$item->id}}" class="form-check-input" value="{{$item->id}}">
+                        <input type="checkbox" name="permission[]" id="{{$item->id}}" class="form-check-input" value="{{$item->id}}">
                         <label for="{{$item->id}}" class="form-check-label">{{$item->name}}</label>
                     </div>
                     @endif

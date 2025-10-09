@@ -23,45 +23,19 @@ class StoreRecepcionistaRequest extends FormRequest
     public function rules()
     {
         return [
-            // Reglas para Usuario
-            'nombre' => 'required|string|max:255',
-            'apellido' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:usuarios,email',
-            'password' => 'required|string|min:8',
-            'telefono' => 'nullable|string|max:20',
-            'direccion' => 'nullable|string|max:255',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', 
-            
-            // Reglas para Recepcionista
+            'usuario_id' => 'required|exists:usuarios,id|unique:recepcionistas,usuario_id',
             'turno' => ['required', Rule::in(['mañana', 'tarde', 'noche'])],
             'estado' => ['required', Rule::in(['activo', 'inactivo'])],
         ];
     }
-    
-    /**
-     * Get the error messages for the defined validation rules.
-     *
-     * @return array
-     */
+
     public function messages()
     {
         return [
-            'nombre.required' => 'El campo **Nombre** es obligatorio.',
-            'apellido.required' => 'El campo **Apellido** es obligatorio.',
-            
-            'email.required' => 'El **Email** es obligatorio.',
-            'email.email' => 'Debe ingresar un formato de email válido.',
-            'email.unique' => 'Este **Email** ya está registrado en el sistema.',
-            
-            'password.required' => 'La **Contraseña** es obligatoria.',
-            'password.min' => 'La contraseña debe tener al menos :min caracteres.',
-            
-            'foto.image' => 'El archivo debe ser una imagen.',
-            'foto.max' => 'La foto no puede pesar más de 2MB.',
-            
+            'usuario_id.required' => 'Debe seleccionar un usuario',
+            'usuario_id.unique' => 'Este usuario ya está registrado como recepcionista',
             'turno.required' => 'Debe seleccionar un **Turno** para el recepcionista.',
             'turno.in' => 'El valor del turno seleccionado no es válido.',
-
             'estado.required' => 'Debe seleccionar un **Estado** para el recepcionista.',
         ];
     }
