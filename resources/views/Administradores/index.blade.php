@@ -22,7 +22,7 @@
     </ol>
 
     <div class="mb-4">
-        <a href="{{route('administrador.create')}}" class="btn btn-primary">
+        <a href="{{route('administradors.create')}}" class="btn btn-primary">
             <button type='button' class="btn btn-primary">
                 <i class="fas fa-user-plus"></i> Añadir Nuevo Administrador
             </button>
@@ -65,7 +65,7 @@
                         <td>{{ \Carbon\Carbon::parse($adminis->fecha_registro)->format('d/m/Y') }}</td>
                         <td>
                             <div class="btn-group">
-                                <a href="{{ route('administrador.edit',$adminis->id) }}" class="btn btn-warning btn-sm">
+                                <a href="{{ route('administradors.edit',$adminis->id) }}" class="btn btn-warning btn-sm">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 @can('eliminar-usuario')
@@ -93,7 +93,7 @@
                                 </div>
                                 <div class="modal-footer justify-content-center border-0">
                                     <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
-                                    <form action="{{ route('administrador.eliminar', $adminis->id) }}" method="post" style="display:inline;">
+                                    <form action="{{ route('administradors.destroy', $adminis->id) }}" method="post" style="display:inline;">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-danger px-4">Confirmar</button>

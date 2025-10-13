@@ -11,7 +11,7 @@ class Administrador extends Model
     protected $table = 'administradors';
     protected $primaryKey = 'id';
     public $incrementing = true;
-    protected $keyType = 'int';
+   // protected $keyType = 'int';
     
     protected $fillable = [
         'id',

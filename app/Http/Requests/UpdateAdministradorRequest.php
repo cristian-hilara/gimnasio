@@ -21,13 +21,19 @@ class UpdateAdministradorRequest extends FormRequest
      */
     public function rules(): array
     {
-    $admin = $this->route('id');
-    $adminId = is_object($admin) ? $admin->id : $admin;
 
-    return [
-        'usuario_id' => 'required|unique:administradors,usuario_id,' . $adminId . ',id',
-        'area_responsabilidad' => 'required|string|max:255',
-        'estado' => 'required|in:activo,inactivo',
-    ];
+
+        return [
+            'area_responsabilidad' => 'required|string|max:255',
+            'estado' => 'required|in:activo,inactivo',
+        ];
+    }
+    public function messages(): array
+    {
+        return [
+            'area_responsabilidad.required' => 'El área de responsabilidad es obligatoria.',
+            'estado.required' => 'Debes seleccionar un estado.',
+            'estado.in' => 'El estado debe ser activo o inactivo.',
+        ];
     }
 }

@@ -139,7 +139,9 @@ class InstructorController extends Controller
 
             return redirect()->route('instructors.index')->with('success', 'Instructor actualizado exitosamente');
         } catch (\Exception $e) {
-            // ... (manejo de error)
+            
+            DB::rollBack();
+            return redirect()->back()->withErrors(['error' => 'Error al actualizar el instructor: ' . $e->getMessage()]);
         }
     }
 

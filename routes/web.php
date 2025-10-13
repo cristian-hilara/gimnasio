@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActividadController;
 use App\Http\Controllers\AdministradorController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\loginController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\InstructorController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\RedirectController;
 use App\Http\Controllers\roleController;
+use App\Http\Controllers\TipoActividadHorarioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,19 +64,9 @@ Route::resource('usuarios', UsuarioController::class)->middleware(['auth', 'role
 
 Route::resource('roles', roleController::class)->middleware('auth');
 
-// Rutas adicionales para administrador
-Route::prefix('administrador')->middleware('auth')->group(function () {
-    Route::get('/', [AdministradorController::class, 'index'])->name('administrador.index');
-    Route::get('/create', [AdministradorController::class, 'create'])->name('administrador.create');
-    Route::post('/', [AdministradorController::class, 'store'])->name('administrador.store');
-    Route::get('/{id}', [AdministradorController::class, 'edit'])->name('administrador.edit');
-    Route::put('/{id}', [AdministradorController::class, 'update'])->name('administrador.actualizar');
-    Route::delete('/{id}', [AdministradorController::class, 'destroy'])->name('administrador.eliminar');
-    Route::get('/buscar-usuarios', [AdministradorController::class, 'buscarUsuarios'])->name('buscar.usuarios');
-});
 
-
-
+//tutas de administrador
+Route::resource('administradors', AdministradorController::class);
 
 // Rutas de Clientes
 Route::resource('clientes', ClienteController::class);
@@ -85,6 +77,16 @@ Route::resource('recepcionistas', RecepcionistaController::class);
 
 // Ruta adicional para generar QR
 Route::get('clientes/{id}/qr', [ClienteController::class, 'generateQR'])->name('clientes.qr');
+
+
+//gestion de actividades
+// Rutas de salas
+Route::resource('salas', App\Http\Controllers\SalaController::class);
+// Rutas de actividades
+Route::resource('actividades', ActividadController::class);
+Route::resource('actividad_horarios',TipoActividadHorarioController::class);
+Route::resource('tipos_actividad', App\Http\Controllers\TipoActividadController::class);
+
 
 // Páginas de error
 Route::view('/401', 'pages.401');

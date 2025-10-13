@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreAdministradorRequest;
 use App\Http\Requests\UpdateAdministradorRequest;
 use App\Models\Administrador;
+use App\Models\Instructor;
 use App\Models\Usuario;
 use Auth;
 use Illuminate\Http\Request;
@@ -42,45 +43,28 @@ class AdministradorController extends Controller
     }
 
 
-    public function buscarUsuarios(Request $request)
-    {
-        $term = $request->get('term');
-        $usuarios = \App\Models\Usuario::where('nombre', 'LIKE', '%' . $term . '%')
-            ->orWhere('apellido', 'LIKE', '%' . $term . '%')
-            ->select('id', 'nombre', 'apellido')
-            ->get();
 
-        // Puedes crear un campo completo para mostrar nombre y apellido juntos
-        $data = $usuarios->map(function ($usuario) {
-            return [
-                'id' => $usuario->id,
-                'label' => $usuario->nombre . ' ' . $usuario->apellido, // texto mostrado en la lista
-                'value' => $usuario->nombre . ' ' . $usuario->apellido, // texto que queda en el input al seleccionar
-            ];
-        });
-
-        return response()->json($data);
-    }
     /**
      * Show the form for creating a new resource.
      */
 
     public function create()
     {
-        $usuario = Usuario::all();
-        return view('administradores.create', compact('usuario'));
+
+        $usuarios = Usuario::role('ADMINISTRADOR') // Filtra por rol usando Spatie
+            ->whereNotIn('id', function ($query) {
+                $query->select('usuario_id')->from('administradors');
+            })
+            ->get();
+        return view('administradores.create', compact('usuarios'));
     }
+
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(StoreAdministradorRequest $request)
     {
-        // Validar si el usuario ya está registrado como administrador
-        if (Administrador::where('usuario_id', $request->usuario_id)->exists()) {
-            return redirect()->back()->withErrors(['usuario_id' => 'El usuario ya está registrado como administrador.'])->withInput();
-        }
-        //        Administrador::create($request->validated());
         DB::beginTransaction();
         try {
             //$administrador = new Administrador();
@@ -90,7 +74,7 @@ class AdministradorController extends Controller
             Administrador::create($request->validated());
 
             DB::commit();
-            return redirect()->route('administrador.index')->with('success', 'Administrador creado exitosamente.');
+            return redirect()->route('administradors.index')->with('success', 'Administrador creado exitosamente.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->withErrors(['error' => 'Error al crear el administrador: ' . $e->getMessage()]);
@@ -100,33 +84,37 @@ class AdministradorController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Administrador $administrador)
     {
-        //
+        $administrador->load('usuario');
+        return response()->json($administrador);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    
+    public function edit(Administrador $administrador)
     {
-        $admin = Administrador::findOrFail($id);
-        return view('administradores.edit', compact('admin'));
+        return view('administradores.edit', compact('administrador'));
     }
+
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateAdministradorRequest $request, String $id)
+    public function update(UpdateAdministradorRequest $request, Administrador $administrador)
     {
         try {
             DB::beginTransaction();
 
-            $admin = Administrador::findOrFail($id);
-            $admin->update($request->validated());
+            $administrador->area_responsabilidad = $request->area_responsabilidad;
+            $administrador->estado = $request->estado;
+            $administrador->save();
+
 
             DB::commit();
-            return redirect()->route('administrador.index')->with('success', 'Administrador actualizado exitosamente.');
+            return redirect()->route('administradors.index')->with('success', 'Administrador actualizado exitosamente.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->withErrors(['error' => 'Error al actualizar el administrador: ' . $e->getMessage()]);
@@ -136,19 +124,38 @@ class AdministradorController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Administrador $administrador)
     {
         try {
             DB::beginTransaction();
 
-            $admin = Administrador::findOrFail($id);
-            $admin->delete();
+            $usuario = $administrador->usuario;
+
+            // Verificar si el usuario está vinculado a otros módulos
+            $estaVinculado = $usuario->cliente()->exists()
+                || $usuario->recepcionista()->exists()
+                || $usuario->instructor()->exists();
+
+            if ($estaVinculado) {
+                return response()->json([
+                    'message' => 'No se puede eliminar este administrador porque el usuario está vinculado a otros módulos.'
+                ], 403);
+            }
+
+            // Eliminar el registro de administrador
+            $administrador->delete();
 
             DB::commit();
-            return redirect()->route('administrador.index')->with('success', 'Administrador eliminado exitosamente.');
+
+            return response()->json([
+                'message' => 'Administrador eliminado correctamente.'
+            ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withErrors(['error' => 'Error al eliminar el administrador: ' . $e->getMessage()]);
+            return response()->json([
+                'message' => 'No se pudo eliminar el administrador.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }

@@ -44,4 +44,13 @@ class Instructor extends Model
         }
         return asset('img/default-avatar.png');
     }
+
+    //actidades
+ 
+
+    public function horarios()
+    {
+        return $this->hasMany(ActividadHorario::class, 'instructor_id', 'id');
+    }
+    
 }

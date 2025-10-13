@@ -11,36 +11,49 @@
 <div class="card p-4">
     <div class="card-body">
         <h2 class="mb-4 text-center fw-bold"><i class="fa-solid fa-user-plus text-primary"></i> Crear Administrador</h2>
-        <form action="{{ route('administrador.store')}}" method="post">
+        <form action="{{ route('administradors.store')}}" method="post">
             @csrf
             <div class="row g-3">
 
+
+
+                <!-- Selección de Usuario -->
+                <div class="row">
+                    <!-- Selección de Usuario -->
+                    <div class="col-md-12 mb-4">
+                        <label for="usuario_id" class="form-label">
+                            <i class="fas fa-user"></i> Seleccionar Usuario *
+                        </label>
+                        <select name="usuario_id" id="usuario_id"
+                            class="form-select @error('usuario_id') is-invalid @enderror">
+                            <option value="">-- Seleccione un usuario --</option>
+                            @foreach($usuarios as $usuario)
+                            <option value="{{$usuario->id}}"
+                                {{ old('usuario_id') == $usuario->id ? 'selected' : '' }}>
+                                {{$usuario->nombre}} {{$usuario->apellido}} - {{$usuario->email}}
+                            </option>
+                            @endforeach
+                        </select>
+                        @error('usuario_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <small class="form-text text-muted">
+                            Solo aparecen usuarios que aún no son administradores
+                        </small>
+                    </div>
+                </div>
                 <!-- area-responsabilidad -->
                 <div class="col-md-6">
                     <label for="area_responsabilidad" class="form-label">Area</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
-                        <input type="text" name="area_responsabilidad" id="area_responsabilidad" class="form-control" value="{{old('area_responsabilidad')}}" >
+                        <input type="text" name="area_responsabilidad" id="area_responsabilidad" class="form-control" value="{{old('area_responsabilidad')}}">
                     </div>
                     @error('area_responsabilidad')
                     <span class="text-danger">{{$message}}</span>
                     @enderror
 
                 </div>
-
-                <!-- usauario_id -->
-
-
-                <div class="col-md-6">
-                    <label for="usuario_search" class="form-label">Usuario</label>
-                    <input type="text" id="usuario_search" class="form-control" placeholder="Escribe para buscar usuario" autocomplete="off">
-                    <input type="hidden" name="usuario_id" id="usuario_id" value="{{ old('usuario_id') }}">
-
-                    @error('usuario_id')
-                    <small class="text-danger">{{'*'.$message}}</small>
-                    @enderror
-                </div>
-
                 <!-- estado -->
                 <div class="col-md-6">
                     <label for="estado" class="form-label">Estado</label>
