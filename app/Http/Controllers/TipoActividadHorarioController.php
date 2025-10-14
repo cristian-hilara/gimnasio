@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ActividadHorarioRequest;
 use App\Models\Actividad;
 use App\Models\ActividadHorario;
 use App\Models\Instructor;
@@ -25,25 +26,21 @@ class TipoActividadHorarioController extends Controller
         return view('actividades.horarios.create', compact('actividades', 'instructores', 'salas'));
     }
 
-    public function store(Request $request)
+    public function store(ActividadHorarioRequest $request)
     {
-        $request->validate([
-            'actividad_id' => 'required|exists:actividades,id',
-            'dia_semana' => 'required|string',
-            'hora_inicio' => 'required|date_format:H:i',
-            'hora_fin' => 'required|date_format:H:i|after:hora_inicio',
-            'cupo_maximo' => 'required|integer|min:1',
-            'instructor_id' => 'required|exists:instructors,id',
-            'sala_id' => 'required|exists:salas,id',
-            'estado' => 'required|boolean'
-        ], [
-            'actividad_id.required' => 'Debe seleccionar una actividad',
-            'hora_fin.after' => 'La hora de fin debe ser posterior a la hora de inicio',
-            'cupo_maximo.min' => 'El cupo debe ser al menos 1'
-        ]);
-
+        
         try {
-            ActividadHorario::create($request->all());
+            ActividadHorario::create([
+                'actividad_id' => $request->actividad_id,
+                'dia_semana' => $request->dia_semana,
+                'hora_inicio' => $request->hora_inicio,
+                'hora_fin' => $request->hora_fin,
+                'cupo_maximo' => $request->cupo_maximo,
+                'instructor_id' => $request->instructor_id,
+                'sala_id' => $request->sala_id,
+                'estado' => $request->estado
+            ]);
+
             return redirect()->route('actividad_horarios.index')
                 ->with('success', 'Horario de actividad creado exitosamente');
         } catch (\Exception $e) {
@@ -53,36 +50,34 @@ class TipoActividadHorarioController extends Controller
         }
     }
 
-    public function show(ActividadHorario $horario)
+    public function show(ActividadHorario $actividad_horario)
     {
-        $horario->load(['actividad.tipoActividad', 'instructor.usuario', 'sala']);
-        return response()->json($horario);
+        $actividad_horario->load(['actividad.tipoActividad', 'instructor.usuario', 'sala']);
+        return response()->json($actividad_horario);
     }
 
     public function edit(ActividadHorario $actividad_horario)
     {
         $actividades = Actividad::with('tipoActividad')->get();
         $instructores = Instructor::with('usuario')->where('estado', 'activo')->get();
-        $salas = Sala::where('estado', 'activo')->get();
+        $salas = Sala::where('estado', 'disponible')->get();
         
         return view('actividades.horarios.edit', compact('actividad_horario', 'actividades', 'instructores', 'salas'));
     }
 
-    public function update(Request $request, ActividadHorario $horario)
+    public function update(ActividadHorarioRequest $request, ActividadHorario $actividad_horario)
     {
-        $request->validate([
-            'actividad_id' => 'required|exists:actividades,id',
-            'dia_semana' => 'required|string',
-            'hora_inicio' => 'required|date_format:H:i',
-            'hora_fin' => 'required|date_format:H:i|after:hora_inicio',
-            'cupo_maximo' => 'required|integer|min:1',
-            'instructor_id' => 'required|exists:instructors,id',
-            'sala_id' => 'required|exists:salas,id',
-            'estado' => 'required|boolean'
-        ]);
-
         try {
-            $horario->update($request->all());
+            $actividad_horario->update([
+                'actividad_id' => $request->actividad_id,
+                'dia_semana' => $request->dia_semana,
+                'hora_inicio' => $request->hora_inicio,
+                'hora_fin' => $request->hora_fin,
+                'cupo_maximo' => $request->cupo_maximo,
+                'instructor_id' => $request->instructor_id,
+                'sala_id' => $request->sala_id,
+                'estado' => $request->estado
+            ]);
             return redirect()->route('actividad_horarios.index')
                 ->with('success', 'Horario actualizado exitosamente');
         } catch (\Exception $e) {
@@ -92,10 +87,10 @@ class TipoActividadHorarioController extends Controller
         }
     }
 
-    public function destroy(ActividadHorario $horario)
+    public function destroy(ActividadHorario $actividad_horario)
     {
         try {
-            $horario->delete();
+            $actividad_horario->delete();
             return response()->json([
                 'success' => true,
                 'message' => 'Horario eliminado exitosamente'

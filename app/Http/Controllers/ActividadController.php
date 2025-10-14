@@ -53,10 +53,10 @@ class ActividadController extends Controller
         }
     }
 
-    public function show(Actividad $actividad)
+    public function show(Actividad $actividade)
     {
-        $actividad->load('tipoActividad', 'horarios');
-        return response()->json($actividad);
+        $actividade->load('tipoActividad', 'horarios');
+        return response()->json($actividade);
     }
 
     public function edit(Actividad $actividade)
@@ -65,7 +65,7 @@ class ActividadController extends Controller
         return view('actividades.actividades.edit', compact('actividade', 'tiposActividad'));
     }
 
-    public function update(Request $request, Actividad $actividad)
+    public function update(Request $request, Actividad $actividade)
     {
         $request->validate([
             'nombre' => 'required|string|max:255',
@@ -74,7 +74,7 @@ class ActividadController extends Controller
         ]);
 
         try {
-            $actividad->update($request->all());
+            $actividade->update($request->all());
             return redirect()->route('actividades.index')
                 ->with('success', 'Actividad actualizada exitosamente');
         } catch (\Exception $e) {
@@ -84,19 +84,28 @@ class ActividadController extends Controller
         }
     }
 
-    public function destroy(Actividad $actividad)
+    public function destroy(Actividad $actividade)
     {
         try {
-            $actividad->delete();
-            return response()->json([
-                'success' => true,
-                'message' => 'Actividad eliminada exitosamente'
-            ]);
-        } catch (\Exception $e) {
+        if ($actividade->horarios()->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al eliminar: ' . $e->getMessage()
-            ], 500);
+                'message' => 'No se puede eliminar. Existen horarios asociados a esta actividad.'
+            ], 400);
         }
+
+        $actividade->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Actividad eliminada exitosamente'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al eliminar: ' . $e->getMessage()
+        ], 500);
+    }
+       
     }
 }

@@ -405,7 +405,7 @@
                     },
                     success: function(response) {
                         if (response.success) {
-                            Swal.fire('¡Eliminado!', response.message, 'success')
+                            Swal.fire('¡Eliminados!', response.message, 'success')
                                 .then(() => location.reload());
                         }
                     },
@@ -488,7 +488,7 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: `/tipos-actividad/${id}`,
+                    url: `/tipos_actividad/${id}`,
                     method: 'DELETE',
                     data: {
                         _token: '{{ csrf_token() }}'

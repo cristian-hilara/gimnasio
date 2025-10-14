@@ -15,7 +15,7 @@
                 <div class="sb-sidenav-menu-heading">
                     <i class="fas fa-th-large me-2"></i>Módulos
                 </div>
-               
+
                 <a class="nav-link" href="{{route('usuarios.index')}}">
                     <div class="sb-nav-link-icon"><i class="fa-solid fa-users"></i></div>
                     Usuarios
@@ -68,7 +68,7 @@
                 </div>
                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseGimnasio" aria-expanded="false" aria-controls="collapseGimnasio">
                     <div class="sb-nav-link-icon"><i class="fas fa-dumbbell"></i></div>
-                    Gestión
+                    Gestión de Actividades
                     <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
                 </a>
                 <div class="collapse" id="collapseGimnasio" aria-labelledby="headingTwo" data-bs-parent="#sidenavAccordion">
@@ -82,9 +82,49 @@
                     </nav>
                 </div>
 
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseMembresias" aria-expanded="false" aria-controls="collapseMembresias">
+                    <div class="sb-nav-link-icon"><i class="fa-solid fa-id-card-clip"></i></div>
+                    Gestión de Membresías
+                    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                </a>
+                <div class="collapse" id="collapseMembresias" aria-labelledby="headingThree" data-bs-parent="#sidenavAccordion">
+                    <nav class="sb-sidenav-menu-nested nav">
+                        <a class="nav-link" href="{{route('membresias.index')}}">
+                            <i class="fas fa-id-card me-2"></i>Membresias
+                        </a>
+                        <a class="nav-link" href="{{route('promociones.index')}}">
+                            <i class="fas fa-tags me-2"></i>Promociones
+                        </a>
+                    </nav>
+
+                </div>
+
+
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseInscripciones" aria-expanded="false" aria-controls="collapseInscripciones">
+                    <div class="sb-nav-link-icon"><i class="fa-solid fa-id-card-clip"></i></div>
+                    Inscripciones
+                    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                </a>
+                <div class="collapse" id="collapseInscripciones" aria-labelledby="headingThree" data-bs-parent="#sidenavAccordion">
+                    <nav class="sb-sidenav-menu-nested nav">
+                        <a class="nav-link" href="{{ route('historial-membresias.index') }}">
+                            <i class="fas fa-id-card me-2"></i>Historial de Membresías
+                        </a>
+                        <a class="nav-link" href="{{ route('pagos.index') }}">
+                            <i class="fas fa-money-check-alt me-2"></i>Pagos
+                        </a>
+                        <a class="nav-link" href="{{ route('inscripciones.create') }}">
+                            <i class="fas fa-user-plus me-2"></i>Registrar Inscripción
+                        </a>
+                    </nav>
+                </div>
+
+
+
+
             </div>
         </div>
-        
+
         <!-- Footer del Sidebar -->
         <div class="sb-sidenav-footer">
             <div class="user-footer-card">

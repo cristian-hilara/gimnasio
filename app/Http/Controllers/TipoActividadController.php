@@ -32,19 +32,19 @@ class TipoActividadController extends Controller
         }
     }
 
-    public function update(Request $request, TipoActividad $tipoActividad)
+    public function update(Request $request, TipoActividad $tipos_actividad)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255|unique:tipos_actividad,nombre,' . $tipoActividad->id,
+            'nombre' => 'required|string|max:255|unique:tipos_actividad,nombre,' . $tipos_actividad->id,
             'descripcion' => 'nullable|string'
         ]);
 
         try {
-            $tipoActividad->update($request->all());
+            $tipos_actividad->update($request->all());
             return response()->json([
                 'success' => true,
                 'message' => 'Tipo de actividad actualizado exitosamente',
-                'data' => $tipoActividad
+                'data' => $tipos_actividad
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -54,17 +54,17 @@ class TipoActividadController extends Controller
         }
     }
 
-    public function destroy(TipoActividad $tipoActividad)
+    public function destroy(TipoActividad $tipos_actividad)
     {
         try {
-            if ($tipoActividad->actividades()->count() > 0) {
+            if ($tipos_actividad->horarios()->count() > 0) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No se puede eliminar. Existen actividades asociadas a este tipo.'
                 ], 400);
             }
 
-            $tipoActividad->delete();
+            $tipos_actividad->delete();
             return response()->json([
                 'success' => true,
                 'message' => 'Tipo de actividad eliminado exitosamente'

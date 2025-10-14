@@ -13,6 +13,12 @@ use App\Models\Administrador;
 use App\Http\Controllers\RecepcionistaController;
 use App\Http\Controllers\InstructorController;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\HistorialMembresiaController;
+use App\Http\Controllers\InscripcionController;
+use App\Http\Controllers\MembresiaController;
+use App\Http\Controllers\PagoController;
+use App\Http\Controllers\PromocionController;
+use App\Http\Controllers\PromocionMembresiaController;
 use App\Http\Controllers\RedirectController;
 use App\Http\Controllers\roleController;
 use App\Http\Controllers\TipoActividadHorarioController;
@@ -84,9 +90,53 @@ Route::get('clientes/{id}/qr', [ClienteController::class, 'generateQR'])->name('
 Route::resource('salas', App\Http\Controllers\SalaController::class);
 // Rutas de actividades
 Route::resource('actividades', ActividadController::class);
-Route::resource('actividad_horarios',TipoActividadHorarioController::class);
+Route::resource('actividad_horarios', TipoActividadHorarioController::class);
 Route::resource('tipos_actividad', App\Http\Controllers\TipoActividadController::class);
 
+
+// Rutas de membresías
+Route::resource('membresias', MembresiaController::class);
+// Rutas de promociones
+Route::resource('promociones', PromocionController::class);
+
+// Rutas para gestionar la relación entre promociones y membresías
+Route::prefix('promociones/{promocion}/membresias')->group(function () {
+    Route::get('/', [PromocionMembresiaController::class, 'index'])->name('promocion-membresias.index');
+    Route::get('/disponibles', [PromocionMembresiaController::class, 'disponibles'])->name('promocion-membresias.disponibles');
+    Route::post('/', [PromocionMembresiaController::class, 'store'])->name('promocion-membresias.store');
+    Route::put('/{membresia}', [PromocionMembresiaController::class, 'update'])->name('promocion-membresias.update');
+    Route::delete('/{membresia}', [PromocionMembresiaController::class, 'destroy'])->name('promocion-membresias.destroy');
+});
+
+
+
+// Rutas de Inscripciones 
+Route::prefix('inscripciones')->group(function () {
+    Route::get('/create', [InscripcionController::class, 'create'])->name('inscripciones.create');
+    Route::post('/', [InscripcionController::class, 'store'])->name('inscripciones.store');
+    Route::get('/membresia/{membresia}/precio', [InscripcionController::class, 'getPrecioMembresia'])
+        ->name('inscripciones.precio');
+});
+
+// Rutas de Historial de Membresías
+Route::resource('historial-membresias', HistorialMembresiaController::class)->except(['create', 'store']);
+
+// Rutas adicionales para historial
+Route::prefix('historial-membresias')->group(function () {
+    Route::put('/{historialMembresia}/suspend', [HistorialMembresiaController::class, 'suspend'])->name('historial-membresias.suspend');
+    Route::put('/{historialMembresia}/reactivate', [HistorialMembresiaController::class, 'reactivate'])->name('historial-membresias.reactivate');
+    Route::get('/cliente/{cliente}', [HistorialMembresiaController::class, 'porCliente'])->name('historial-membresias.por-cliente');
+    Route::post('/actualizar-estados', [HistorialMembresiaController::class, 'actualizarEstados'])->name('historial-membresias.actualizar-estados');
+});
+
+// Rutas de Pagos
+Route::resource('pagos', PagoController::class);
+
+// Rutas adicionales para pagos
+Route::prefix('pagos')->group(function () {
+    Route::get('/cliente/{cliente}', [PagoController::class, 'porCliente'])->name('pagos.por-cliente');
+    Route::get('/cliente/{cliente}/historiales', [PagoController::class, 'getHistorialesCliente'])->name('pagos.historiales-cliente');
+});
 
 // Páginas de error
 Route::view('/401', 'pages.401');
