@@ -119,6 +119,16 @@
                     </nav>
                 </div>
 
+                <a class="nav-link" href="{{route('asistencias.index')}}">
+                    <div class="sb-nav-link-icon"><i class="fa-solid fa-users"></i></div>
+                    Asistencias
+                </a>
+
+                <a class="nav-link" href="{{route('chat.index')}}">
+                    <div class="sb-nav-link-icon"><i class="fa-solid fa-robot"></i></div>
+                    Chat con Gemini AI
+                </a>
+
 
 
 

@@ -68,8 +68,54 @@ class Cliente extends Model
         return $this->hasMany(HistorialMembresia::class);
     }
 
+   
+
+
+    /**
+     * Relación con Asistencias
+     */
     public function asistencias()
     {
         return $this->hasMany(Asistencia::class);
+    }
+
+    /**
+     * Obtener membresía vigente actual
+     */
+    public function getMembresiaVigenteAttribute()
+    {
+        return $this->historialMembresias()
+            ->where('estado_membresia', 'vigente')
+            ->whereDate('fecha_fin', '>=', today())
+            ->first();
+    }
+
+    /**
+     * Verificar si tiene membresía vigente
+     */
+    public function tieneMembresiaVigente()
+    {
+        return $this->historialMembresias()
+            ->where('estado_membresia', 'vigente')
+            ->whereDate('fecha_fin', '>=', today())
+            ->exists();
+    }
+
+    /**
+     * Última asistencia
+     */
+    public function ultimaAsistencia()
+    {
+        return $this->hasOne(Asistencia::class)->latestOfMany();
+    }
+
+    /**
+     * Asistencia de hoy
+     */
+    public function asistenciaHoy()
+    {
+        return $this->hasOne(Asistencia::class)
+            ->whereDate('fecha', today())
+            ->latest();
     }
 }

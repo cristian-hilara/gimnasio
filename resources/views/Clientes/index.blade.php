@@ -9,6 +9,9 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
 
+<!-- QRCode.js para modal -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <style>
     .card-header-custom {
         background: linear-gradient(135deg, #4762dbff 0%, #5903f7ff 100%);
@@ -30,6 +33,32 @@
     .btn-action:hover {
         transform: scale(1.1);
     }
+
+    .qr-modal-container {
+        text-align: center;
+        padding: 20px;
+    }
+
+    #qrcode {
+        display: inline-block;
+        margin: 20px auto;
+    }
+
+    .badge-vencido {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.6;
+        }
+    }
 </style>
 @endpush
 
@@ -47,12 +76,15 @@
         <a href="{{route('clientes.create')}}" class="btn btn-primary">
             <i class="fas fa-user-plus"></i> Añadir Nuevo Cliente
         </a>
+        <a href="#" class="btn btn-warning">
+            <i class="fas fa-qrcode"></i> Ver Clientes sin QR
+        </a>
     </div>
 
     <div class="card mb-4 shadow-sm">
         <div class="card-header card-header-custom">
             <i class="fas fa-table me-1"></i>
-            Tabla de Recepcionistas
+            Tabla de Clientes
         </div>
 
         <div class="table-responsive p-3">
@@ -64,6 +96,8 @@
                         <th>Peso (kg)</th>
                         <th>Altura (m)</th>
                         <th>IMC</th>
+                        <th>QR</th>
+                        <th>Membresía</th>
                         <th>Estado</th>
                         <th>Fecha registro</th>
                         <th>Acciones</th>
@@ -71,6 +105,32 @@
                 </thead>
                 <tbody>
                     @foreach ( $clientes as $client )
+                    @php
+                    // Obtener la membresía vigente más reciente
+                    $membresia = $client->historialMembresias()
+                    ->where('estado_membresia', 'vigente')
+                    ->orderBy('fecha_fin', 'desc')
+                    ->first();
+
+                    $estadoMembresia = 'sin_membresia';
+                    $fechaFin = null;
+                    $diasRestantes = 0;
+
+                    if ($membresia && $membresia->fecha_fin) {
+                    $fechaFin = \Carbon\Carbon::parse($membresia->fecha_fin);
+                    $hoy = \Carbon\Carbon::now();
+                    $diasRestantes = $hoy->diffInDays($fechaFin, false);
+
+                    if ($diasRestantes < 0) {
+                        $estadoMembresia='vencido' ;
+                        } elseif ($diasRestantes <=7) {
+                        $estadoMembresia='por_vencer' ;
+                        } else {
+                        $estadoMembresia='vigente' ;
+                        }
+                        }
+                        @endphp
+
                     <tr>
                         <td>{{$client->id}}</td>
                         <td class="d-flex align-items-center gap-2">
@@ -98,6 +158,52 @@
                             @endif
                         </td>
                         <td>
+                            @if($client->codigoQR)
+                            <span class="badge bg-secondary" title="QR Generado">
+                                <i class="fas fa-check-circle"></i> Sí
+                            </span>
+                            @else
+                            <span class="badge bg-danger" title="Sin QR">
+                                <i class="fas fa-times-circle"></i> No
+                            </span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($estadoMembresia === 'vigente' && $fechaFin)
+                            <span class="badge bg-success" title="Vence: {{ $fechaFin->format('d/m/Y') }}">
+                                <i class="fas fa-check-circle"></i> Vigente
+                                <br><small>({{ $diasRestantes }} días)</small>
+                            </span>
+                            @elseif($estadoMembresia === 'por_vencer' && $fechaFin)
+                            <span class="badge bg-warning text-dark" title="Vence: {{ $fechaFin->format('d/m/Y') }}">
+                                <i class="fas fa-exclamation-triangle"></i> Por Vencer
+                                <br><small>({{ $diasRestantes }} días)</small>
+                            </span>
+                            @elseif($estadoMembresia === 'vencido' && $fechaFin)
+                            <span class="badge bg-danger badge-vencido" title="Venció: {{ $fechaFin->format('d/m/Y') }}">
+                                <i class="fas fa-times-circle"></i> Vencida
+                                <br><small>(hace {{ abs($diasRestantes) }} días)</small>
+                            </span>
+                            <br>
+                            <a href="{{ route('inscripciones.create', ['cliente_id' => $client->id]) }}"
+                                class="btn btn-sm btn-danger mt-1"
+                                title="Renovar membresía">
+                                <i class="fas fa-redo"></i> Renovar
+                            </a>
+                            @else
+                            <span class="badge bg-danger">
+                                <i class="fas fa-minus-circle"></i> Sin Membresía
+                            </span>
+                            <br>
+                            <a href="{{ route('inscripciones.create', ['cliente_id' => $client->id]) }}"
+                                class="btn btn-sm btn-primary mt-1"
+                                title="Crear membresía">
+                                <i class="fas fa-plus"></i> Inscribir
+                            </a>
+                            @endif
+                        </td>
+
+                        <td>
                             @if($client->estado == 'activo')
                             <span class="badge bg-success">Activo</span>
                             @else
@@ -109,22 +215,51 @@
                         </td>
                         <td>
                             <div class="btn-group" role="group">
+                                <!-- Ver detalles -->
                                 <button type="button" class="btn btn-info btn-sm"onclick="showClienteModal({{$client->id}})"
                                     title="Ver detalles">
                                     <i class="fas fa-eye"></i>
                                 </button>
+
+                                <!--Ver QR rápido (Modal) -->
+                                @if($client->codigoQR)
+                                <button type="button" class="btn btn-success btn-sm"onclick="mostrarQRModal({{$client->id}}, '{{$client->usuario->nombre}} {{$client->usuario->apellido}}', '{{$client->codigoQR}}')"
+                                    title="Ver QR">
+                                    <i class="fas fa-qrcode"></i>
+                                </button>
+                                @endif
+
+                                <!--Ver perfil completo con QR -->
+                                <a href="{{route('clientes.perfil', $client->id)}}"
+                                    class="btn btn-primary btn-sm"
+                                    title="Ver perfil y QR">
+                                    <i class="fas fa-id-card"></i>
+                                </a>
+
+                                <!-- Descargar tarjeta PDF -->
+                                @if($client->codigoQR)
+                                <a href="{{route('clientes.tarjeta.pdf', $client->id)}}"
+                                    class="btn btn-secondary btn-sm"
+                                    title="Descargar tarjeta">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                                @endif
+
+                                <!-- Editar -->
                                 <a href="{{route('clientes.edit', $client->id)}}"
                                     class="btn btn-warning btn-sm" title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </a>
+
+                                <!-- Eliminar -->
                                 <button type="button" class="btn btn-danger btn-sm"onclick="deleteCliente({{$client->id}})"
                                     title="Eliminar">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
                         </td>
-                    </tr>
-                    @endforeach
+                        </tr>
+                        @endforeach
                 </tbody>
             </table>
         </div>
@@ -150,6 +285,36 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--  Modal para mostrar QR -->
+<div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="qrModalLabel">
+                    <i class="fas fa-qrcode"></i> Código QR
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body qr-modal-container">
+                <h5 id="qrClienteNombre"></h5>
+                <div id="qrcode"></div>
+                <p class="mt-3"><code id="qrCodigo"></code></p>
+                <div class="btn-group mt-3">
+                    <a id="qrDownloadBtn" href="#" class="btn btn-success">
+                        <i class="fas fa-download"></i> Descargar QR
+                    </a>
+                    <a id="qrPerfilBtn" href="#" class="btn btn-primary">
+                        <i class="fas fa-id-card"></i> Ver Perfil
+                    </a>
+                    <a id="qrTarjetaBtn" href="#" class="btn btn-secondary">
+                        <i class="fas fa-print"></i> Imprimir Tarjeta
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -191,12 +356,12 @@
     function showClienteModal(id) {
         $('#clienteModal').modal('show');
         $('#clienteModalBody').html(`
-        <div class="text-center">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Cargando...</span>
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
             </div>
-        </div>
-    `);
+        `);
 
         $.ajax({
             url: `/clientes/${id}`,
@@ -211,53 +376,83 @@
                     else badgeClass = 'bg-danger';
 
                     imc = `
-                    <p><strong>IMC:</strong> <span class="badge ${badgeClass}">${data.imc}</span></p>
-                    <p><strong>Clasificación:</strong> ${data.clasificacion_imc}</p>
-                `;
+                        <p><strong>IMC:</strong> <span class="badge ${badgeClass}">${data.imc}</span></p>
+                        <p><strong>Clasificación:</strong> ${data.clasificacion_imc}</p>
+                    `;
                 }
 
                 $('#clienteModalBody').html(`
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="text-primary"><i class="fas fa-user"></i> Información Personal</h6>
-                        <hr>
-                        <p><strong>Nombre:</strong> ${data.usuario.nombre} ${data.usuario.apellido}</p>
-                        <p><strong>Email:</strong> ${data.usuario.email || 'N/A'}</p>
-                        <p><strong>Teléfono:</strong> ${data.usuario.telefono || 'N/A'}</p>
-                        <p><strong>Dirección:</strong> ${data.usuario.direccion || 'N/A'}</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary"><i class="fas fa-user"></i> Información Personal</h6>
+                            <hr>
+                            <p><strong>Nombre:</strong> ${data.usuario.nombre} ${data.usuario.apellido}</p>
+                            <p><strong>Email:</strong> ${data.usuario.email || 'N/A'}</p>
+                            <p><strong>Teléfono:</strong> ${data.usuario.telefono || 'N/A'}</p>
+                            <p><strong>Dirección:</strong> ${data.usuario.direccion || 'N/A'}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary"><i class="fas fa-heartbeat"></i> Información Física</h6>
+                            <hr>
+                            <p><strong>Peso:</strong> ${data.peso ? data.peso + ' kg' : 'N/A'}</p>
+                            <p><strong>Altura:</strong> ${data.altura ? data.altura + ' m' : 'N/A'}</p>
+                            ${imc}
+                            <p><strong>Código QR:</strong> <code>${data.codigoQR || 'Sin generar'}</code></p>
+                            <p><strong>Estado:</strong> 
+                                <span class="badge ${data.estado === 'activo' ? 'bg-success' : 'bg-danger'}">
+                                    ${data.estado.charAt(0).toUpperCase() + data.estado.slice(1)}
+                                </span>
+                            </p>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <h6 class="text-primary"><i class="fas fa-heartbeat"></i> Información Física</h6>
-                        <hr>
-                        <p><strong>Peso:</strong> ${data.peso ? data.peso + ' kg' : 'N/A'}</p>
-                        <p><strong>Altura:</strong> ${data.altura ? data.altura + ' m' : 'N/A'}</p>
-                        ${imc}
-                        <p><strong>Código QR:</strong> <code>${data.codigoQR}</code></p>
-                        <p><strong>Estado:</strong> 
-                            <span class="badge ${data.estado === 'activo' ? 'bg-success' : 'bg-danger'}">
-                                ${data.estado.charAt(0).toUpperCase() + data.estado.slice(1)}
-                            </span>
-                        </p>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6 class="text-primary"><i class="fas fa-calendar"></i> Fechas</h6>
+                            <hr>
+                            <p><strong>Fecha de registro:</strong> ${new Date(data.created_at).toLocaleDateString('es-ES')}</p>
+                            <p><strong>Última actualización:</strong> ${new Date(data.updated_at).toLocaleDateString('es-ES')}</p>
+                        </div>
                     </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <h6 class="text-primary"><i class="fas fa-calendar"></i> Fechas</h6>
-                        <hr>
-                        <p><strong>Fecha de registro:</strong> ${new Date(data.created_at).toLocaleDateString('es-ES')}</p>
-                        <p><strong>Última actualización:</strong> ${new Date(data.updated_at).toLocaleDateString('es-ES')}</p>
-                    </div>
-                </div>
-            `);
+                `);
             },
             error: function() {
                 $('#clienteModalBody').html(`
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle"></i> Error al cargar los datos del cliente
-                </div>
-            `);
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> Error al cargar los datos del cliente
+                    </div>
+                `);
             }
         });
+    }
+
+    // Función para mostrar QR en modal
+    function mostrarQRModal(clienteId, nombreCliente, codigoQR) {
+        // Limpiar QR anterior si existe
+        $('#qrcode').empty();
+
+        // Actualizar información
+        $('#qrClienteNombre').text(nombreCliente);
+        $('#qrCodigo').text(codigoQR);
+
+        // Actualizar enlaces
+        $('#qrDownloadBtn').attr('href', `/clientes/${clienteId}/qr/descargar`);
+        $('#qrPerfilBtn').attr('href', `/clientes/${clienteId}/perfil`);
+        $('#qrTarjetaBtn').attr('href', `/clientes/${clienteId}/tarjeta/pdf`);
+
+        // Mostrar modal
+        $('#qrModal').modal('show');
+
+        // Generar QR
+        setTimeout(function() {
+            new QRCode(document.getElementById("qrcode"), {
+                text: codigoQR,
+                width: 256,
+                height: 256,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }, 300);
     }
 
     function deleteCliente(id) {

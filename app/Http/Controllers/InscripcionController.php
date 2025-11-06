@@ -16,15 +16,15 @@ class InscripcionController extends Controller
     /**
      * 
      */
-    public function create()
+    public function create(Request $request)
     {
-        $clientes = Cliente::with('usuario')
-            ->where('estado', 'activo')
-            ->get();
+        $clienteId = $request->input('cliente_id'); // viene desde el botón "Inscribir"
+        $clientes = Cliente::with('usuario')->where('estado', 'activo')->get();
         $membresias = Membresia::where('estado', true)->get();
 
-        return view('inscripciones.create', compact('clientes', 'membresias'));
+        return view('inscripciones.create', compact('clientes', 'membresias', 'clienteId'));
     }
+
 
     /**
      * Registrar inscripción como la compra de membresía

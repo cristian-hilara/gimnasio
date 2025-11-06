@@ -55,7 +55,36 @@ class PagoController extends Controller
     public function show(Pago $pago)
     {
         $pago->load(['cliente.usuario', 'historialMembresia.membresia']);
-        return response()->json($pago);
+
+        $historial = $pago->historialMembresia;
+
+        $estadoBadge = match ($historial->estado_membresia) {
+            'vigente' => ['clase' => 'bg-success', 'texto' => 'Vigente'],
+            'vencida' => ['clase' => 'bg-secondary', 'texto' => 'Vencida'],
+            'suspendida' => ['clase' => 'bg-warning', 'texto' => 'Suspendida'],
+            default => ['clase' => 'bg-dark', 'texto' => ucfirst($historial->estado_membresia)],
+        };
+
+        return response()->json([
+            'cliente' => $pago->cliente,
+            'fecha_pago' => $pago->fecha_pago,
+            'monto' => $pago->monto,
+            'metodo_pago_texto' => ucfirst($pago->metodo_pago),
+            'metodo_pago_icono' => match ($pago->metodo_pago) {
+                'efectivo' => 'fa-money-bill-wave',
+                'tarjeta' => 'fa-credit-card',
+                'transferencia' => 'fa-university',
+                'qr' => 'fa-qrcode',
+                default => 'fa-money-check',
+            },
+            'referencia_pago' => $pago->referencia_pago,
+            'historial_membresia' => [
+                'membresia' => $historial->membresia,
+                'fecha_inicio' => $historial->fecha_inicio,
+                'fecha_fin' => $historial->fecha_fin,
+                'estado_badge' => $estadoBadge,
+            ]
+        ]);
     }
 
     public function edit(Pago $pago)

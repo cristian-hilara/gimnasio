@@ -6,10 +6,12 @@
     .form-label {
         font-weight: 600;
     }
+
     .card-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
     }
+
     .precio-card {
         background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         border-radius: 15px;
@@ -18,23 +20,35 @@
         margin-top: 1rem;
         display: none;
     }
+
     .precio-card.active {
         display: block;
         animation: fadeIn 0.3s ease;
     }
+
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
+
     .precio-original {
         text-decoration: line-through;
         opacity: 0.7;
         font-size: 1.2rem;
     }
+
     .precio-final {
         font-size: 2.5rem;
         font-weight: bold;
     }
+
     .descuento-badge {
         font-size: 1.2rem;
         padding: 0.5rem 1rem;
@@ -66,19 +80,20 @@
                         <label for="cliente_id" class="form-label">
                             <i class="fas fa-user"></i> Cliente *
                         </label>
-                        <select name="cliente_id" 
-                            id="cliente_id" 
-                            class="form-select @error('cliente_id') is-invalid @enderror" 
+                        <select name="cliente_id"
+                            id="cliente_id"
+                            class="form-select @error('cliente_id') is-invalid @enderror"
                             required>
                             <option value="">-- Seleccione un cliente --</option>
                             @foreach($clientes as $cliente)
-                                <option value="{{$cliente->id}}" {{ old('cliente_id') == $cliente->id ? 'selected' : '' }}>
-                                    {{$cliente->usuario->nombre}} {{$cliente->usuario->apellido}} - CI: {{$cliente->usuario->ci ?? 'N/A'}}
-                                </option>
+                            <option value="{{ $cliente->id }}"
+                                {{ old('cliente_id', $clienteId) == $cliente->id ? 'selected' : '' }}>
+                                {{$cliente->usuario->nombre}} {{$cliente->usuario->apellido}} - CI: {{$cliente->usuario->ci ?? 'N/A'}}
+                            </option>
                             @endforeach
                         </select>
                         @error('cliente_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
@@ -87,19 +102,19 @@
                         <label for="membresia_id" class="form-label">
                             <i class="fas fa-id-card"></i> Membresía *
                         </label>
-                        <select name="membresia_id" 
-                            id="membresia_id" 
-                            class="form-select @error('membresia_id') is-invalid @enderror" 
+                        <select name="membresia_id"
+                            id="membresia_id"
+                            class="form-select @error('membresia_id') is-invalid @enderror"
                             required>
                             <option value="">-- Seleccione una membresía --</option>
                             @foreach($membresias as $membresia)
-                                <option value="{{$membresia->id}}" {{ old('membresia_id') == $membresia->id ? 'selected' : '' }}>
-                                    {{$membresia->nombre}} - {{$membresia->duracion_texto}} - Bs. {{number_format($membresia->precio, 2)}}
-                                </option>
+                            <option value="{{$membresia->id}}" {{ old('membresia_id') == $membresia->id ? 'selected' : '' }}>
+                                {{$membresia->nombre}} - {{$membresia->duracion_texto}} - Bs. {{number_format($membresia->precio, 2)}}
+                            </option>
                             @endforeach
                         </select>
                         @error('membresia_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
@@ -143,13 +158,13 @@
                         <label for="fecha_inicio" class="form-label">
                             <i class="fas fa-calendar-alt"></i> Fecha de Inicio
                         </label>
-                        <input type="date" 
-                            name="fecha_inicio" 
-                            id="fecha_inicio" 
+                        <input type="date"
+                            name="fecha_inicio"
+                            id="fecha_inicio"
                             class="form-control @error('fecha_inicio') is-invalid @enderror"
                             value="{{old('fecha_inicio', date('Y-m-d'))}}">
                         @error('fecha_inicio')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                         <small class="form-text text-muted">
                             Si no selecciona, se usará la fecha de hoy
@@ -161,9 +176,9 @@
                         <label for="metodo_pago" class="form-label">
                             <i class="fas fa-credit-card"></i> Método de Pago *
                         </label>
-                        <select name="metodo_pago" 
-                            id="metodo_pago" 
-                            class="form-select @error('metodo_pago') is-invalid @enderror" 
+                        <select name="metodo_pago"
+                            id="metodo_pago"
+                            class="form-select @error('metodo_pago') is-invalid @enderror"
                             required>
                             <option value="">-- Seleccione --</option>
                             <option value="efectivo" {{ old('metodo_pago') == 'efectivo' ? 'selected' : '' }}>
@@ -180,7 +195,7 @@
                             </option>
                         </select>
                         @error('metodo_pago')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
@@ -191,14 +206,14 @@
                         <label for="referencia_pago" class="form-label">
                             <i class="fas fa-hashtag"></i> Referencia de Pago
                         </label>
-                        <input type="text" 
-                            name="referencia_pago" 
-                            id="referencia_pago" 
+                        <input type="text"
+                            name="referencia_pago"
+                            id="referencia_pago"
                             class="form-control @error('referencia_pago') is-invalid @enderror"
                             value="{{old('referencia_pago')}}"
                             placeholder="Número de comprobante, transacción, etc.">
                         @error('referencia_pago')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
@@ -206,7 +221,7 @@
                 <hr>
 
                 <div class="d-flex justify-content-between">
-                    <a href="{{route('historial-membresias.index')}}" class="btn btn-secondary">
+                    <a href="{{route('clientes.index')}}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Cancelar
                     </a>
                     <button type="submit" class="btn btn-primary" id="btnSubmit" disabled>
@@ -222,61 +237,61 @@
 @push('js')
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
-$(document).ready(function() {
-    // Cargar precio al seleccionar membresía
-    $('#membresia_id').on('change', function() {
-        const membresiaId = $(this).val();
-        
-        if (!membresiaId) {
-            $('#precioCard').removeClass('active');
-            $('#btnSubmit').prop('disabled', true);
-            return;
-        }
-        
-        $.ajax({
-            url: `/inscripciones/membresia/${membresiaId}/precio`,
-            method: 'GET',
-            success: function(response) {
-                if (response.success) {
-                    const data = response.data;
-                    
-                    // Mostrar precios
-                    $('#precioOriginal').text('Bs. ' + parseFloat(data.precio_original).toFixed(2));
-                    $('#precioFinal').text('Bs. ' + parseFloat(data.precio_final).toFixed(2));
-                    $('#duracionDias').text(data.duracion_dias);
-                    $('#fechaFinEstimada').text(data.fecha_fin_estimada);
-                    
-                    // Mostrar info de promoción si existe
-                    if (data.tiene_promocion) {
-                        $('#descuentoPorcentaje').text(data.porcentaje_descuento.toFixed(0));
-                        $('#promocionNombre').text(`Promoción: ${data.promocion.nombre} (válida hasta ${data.promocion.fecha_fin})`);
-                        $('#promocionInfo').show();
-                    } else {
-                        $('#promocionInfo').hide();
+    $(document).ready(function() {
+        // Cargar precio al seleccionar membresía
+        $('#membresia_id').on('change', function() {
+            const membresiaId = $(this).val();
+
+            if (!membresiaId) {
+                $('#precioCard').removeClass('active');
+                $('#btnSubmit').prop('disabled', true);
+                return;
+            }
+
+            $.ajax({
+                url: `/inscripciones/membresia/${membresiaId}/precio`,
+                method: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        const data = response.data;
+
+                        // Mostrar precios
+                        $('#precioOriginal').text('Bs. ' + parseFloat(data.precio_original).toFixed(2));
+                        $('#precioFinal').text('Bs. ' + parseFloat(data.precio_final).toFixed(2));
+                        $('#duracionDias').text(data.duracion_dias);
+                        $('#fechaFinEstimada').text(data.fecha_fin_estimada);
+
+                        // Mostrar info de promoción si existe
+                        if (data.tiene_promocion) {
+                            $('#descuentoPorcentaje').text(data.porcentaje_descuento.toFixed(0));
+                            $('#promocionNombre').text(`Promoción: ${data.promocion.nombre} (válida hasta ${data.promocion.fecha_fin})`);
+                            $('#promocionInfo').show();
+                        } else {
+                            $('#promocionInfo').hide();
+                        }
+
+                        // Mostrar card
+                        $('#precioCard').addClass('active');
+                        $('#btnSubmit').prop('disabled', false);
                     }
-                    
-                    // Mostrar card
-                    $('#precioCard').addClass('active');
-                    $('#btnSubmit').prop('disabled', false);
+                },
+                error: function() {
+                    alert('Error al cargar el precio de la membresía');
                 }
-            },
-            error: function() {
-                alert('Error al cargar el precio de la membresía');
+            });
+        });
+
+        // Validar selección de cliente y membresía
+        $('#cliente_id, #membresia_id').on('change', function() {
+            const clienteId = $('#cliente_id').val();
+            const membresiaId = $('#membresia_id').val();
+
+            if (clienteId && membresiaId) {
+                $('#btnSubmit').prop('disabled', false);
+            } else {
+                $('#btnSubmit').prop('disabled', true);
             }
         });
     });
-    
-    // Validar selección de cliente y membresía
-    $('#cliente_id, #membresia_id').on('change', function() {
-        const clienteId = $('#cliente_id').val();
-        const membresiaId = $('#membresia_id').val();
-        
-        if (clienteId && membresiaId) {
-            $('#btnSubmit').prop('disabled', false);
-        } else {
-            $('#btnSubmit').prop('disabled', true);
-        }
-    });
-});
 </script>
 @endpush

@@ -36,7 +36,7 @@ class MembresiaController extends Controller
 
         try {
             Membresia::create($request->all());
-            return redirect()->route('membresias.membresias.index')
+            return redirect()->route('membresias.index')
                 ->with('success', 'Membresía creada exitosamente');
         } catch (\Exception $e) {
             return redirect()->back()

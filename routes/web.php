@@ -2,11 +2,13 @@
 
 use App\Http\Controllers\ActividadController;
 use App\Http\Controllers\AdministradorController;
+use App\Http\Controllers\AsistenciaController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\loginController;
 
 use App\Http\Controllers\Auth\homeController;
 use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\UsuarioController;
 
 use App\Models\Administrador;
@@ -74,8 +76,16 @@ Route::resource('roles', roleController::class)->middleware('auth');
 //tutas de administrador
 Route::resource('administradors', AdministradorController::class);
 
-// Rutas de Clientes
+// CRUD de clientes
 Route::resource('clientes', ClienteController::class);
+
+// Perfil del cliente
+Route::get('/clientes/{id}/perfil', [ClienteController::class, 'perfil'])->name('clientes.perfil');
+Route::get('/clientes/{id}/qr/descargar', [ClienteController::class, 'descargarQR'])->name('clientes.qr.descargar');
+Route::get('/clientes/{id}/tarjeta', [ClienteController::class, 'verTarjeta'])->name('clientes.tarjeta');
+Route::get('/clientes/{id}/tarjeta/pdf', [ClienteController::class, 'generarTarjeta'])->name('clientes.tarjeta.pdf');
+Route::post('/clientes/{id}/qr/regenerar', [ClienteController::class, 'regenerarQR'])->name('clientes.qr.regenerar');
+
 //Rutas instructores
 Route::resource('instructors', InstructorController::class);
 //tutas recepcionista
@@ -137,6 +147,63 @@ Route::prefix('pagos')->group(function () {
     Route::get('/cliente/{cliente}', [PagoController::class, 'porCliente'])->name('pagos.por-cliente');
     Route::get('/cliente/{cliente}/historiales', [PagoController::class, 'getHistorialesCliente'])->name('pagos.historiales-cliente');
 });
+
+
+
+Route::prefix('asistencias')->group(function () {
+    Route::get('/', [AsistenciaController::class, 'index'])->name('asistencias.index');
+    Route::post('/manual/{id}', [AsistenciaController::class, 'registrarManual'])->name('asistencias.registrarManual');
+    Route::post('/salida/{id}', [AsistenciaController::class, 'registrarSalida'])->name('asistencias.registrarSalida');
+
+    // Scanner QR
+    Route::get('/scanner', [AsistenciaController::class, 'scanner'])->name('asistencias.scanner');
+    Route::post('/qr', [AsistenciaController::class, 'registrarQR'])->name('asistencias.registrarQR');
+
+    // Historial
+    Route::get('/historial', [AsistenciaController::class, 'historial'])->name('asistencias.historial');
+
+    // Verificar cliente
+    Route::get('/verificar/{id}', [AsistenciaController::class, 'verificarCliente'])->name('asistencias.verificar');
+});
+
+//chatbot
+Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
+
+Route::post('/chat/send', [ChatController::class, 'send'])->name('chat.send.gemini'); // solo Gemini
+
+Route::post('/chat', [ChatController::class, 'responder'])->name('chat.send'); // con lógica interna + Gemini
+
+
+
+
+Route::get('/test-gemini', function () {
+    $response = Http::post(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . env('GEMINI_API_KEY'),
+        [
+            'contents' => [
+                [
+                    'parts' => [
+                        ['text' => 'Hola, ¿cómo estás?']
+                    ]
+                ]
+            ]
+        ]
+    );
+
+    return $response->json();
+});
+
+Route::get('/test-ssl', function () {
+    $response = Http::get('https://www.google.com');
+    return $response->status(); // Debería devolver 200
+});
+
+Route::get('/phpinfo', function () {
+    phpinfo();
+});
+
+
+
 
 // Páginas de error
 Route::view('/401', 'pages.401');

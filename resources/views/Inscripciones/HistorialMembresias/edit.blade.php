@@ -33,16 +33,16 @@
                 <div class="row">
                     <div class="col-md-6">
                         <strong><i class="fas fa-user"></i> Cliente:</strong> 
-                        {{$historialMembresia->cliente->usuario->nombre}} {{$historialMembresia->cliente->usuario->apellido}}
+                        {{$historial_membresia->cliente->usuario->nombre}} {{$historial_membresia->cliente->usuario->apellido}}
                     </div>
                     <div class="col-md-6">
                         <strong><i class="fas fa-id-card"></i> Membresía:</strong> 
-                        {{$historialMembresia->membresia->nombre}}
+                        {{$historial_membresia->membresia->nombre}}
                     </div>
                 </div>
             </div>
 
-            <form action="{{route('historial-membresias.update', $historialMembresia->id)}}" method="POST">
+            <form action="{{route('historial-membresias.update', $historial_membresia->id)}}" method="POST">
                 @csrf
                 @method('PUT')
 
@@ -56,7 +56,7 @@
                             name="fecha_inicio" 
                             id="fecha_inicio" 
                             class="form-control @error('fecha_inicio') is-invalid @enderror"
-                            value="{{old('fecha_inicio', $historialMembresia->fecha_inicio->format('Y-m-d'))}}"
+                            value="{{old('fecha_inicio', $historial_membresia->fecha_inicio->format('Y-m-d'))}}"
                             required>
                         @error('fecha_inicio')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -72,7 +72,7 @@
                             name="fecha_fin" 
                             id="fecha_fin" 
                             class="form-control @error('fecha_fin') is-invalid @enderror"
-                            value="{{old('fecha_fin', $historialMembresia->fecha_fin->format('Y-m-d'))}}"
+                            value="{{old('fecha_fin', $historial_membresia->fecha_fin->format('Y-m-d'))}}"
                             required>
                         @error('fecha_fin')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -88,18 +88,17 @@
                         </label>
                         <select name="estado_membresia" 
                             id="estado_membresia" 
-                            class="form-select @error('estado_membresia') is-invalid @enderror" 
-                            required>
+                            class="form-select @error('estado_membresia') is-invalid @enderror" >
                             <option value="vigente" 
-                                {{ old('estado_membresia', $historialMembresia->estado_membresia) == 'vigente' ? 'selected' : '' }}>
+                                {{ old('estado_membresia', $historial_membresia->estado_membresia) == 'vigente' ? 'selected' : '' }}>
                                 Vigente
                             </option>
                             <option value="vencida" 
-                                {{ old('estado_membresia', $historialMembresia->estado_membresia) == 'vencida' ? 'selected' : '' }}>
+                                {{ old('estado_membresia', $historial_membresia->estado_membresia) == 'vencida' ? 'selected' : '' }}>
                                 Vencida
                             </option>
                             <option value="suspendida" 
-                                {{ old('estado_membresia', $historialMembresia->estado_membresia) == 'suspendida' ? 'selected' : '' }}>
+                                {{ old('estado_membresia', $historial_membresia->estado_membresia) == 'suspendida' ? 'selected' : '' }}>
                                 Suspendida
                             </option>
                         </select>
@@ -117,13 +116,13 @@
                             <hr>
                             <div class="row">
                                 <div class="col-md-4">
-                                    <strong>Precio Original:</strong> Bs. {{number_format($historialMembresia->precio_original, 2)}}
+                                    <strong>Precio Original:</strong> Bs. {{number_format($historial_membresia->precio_original, 2)}}
                                 </div>
                                 <div class="col-md-4">
-                                    <strong>Descuento:</strong> Bs. {{number_format($historialMembresia->descuento_aplicado, 2)}}
+                                    <strong>Descuento:</strong> Bs. {{number_format($historial_membresia->descuento_aplicado, 2)}}
                                 </div>
                                 <div class="col-md-4">
-                                    <strong>Precio Final:</strong> Bs. {{number_format($historialMembresia->precio_final, 2)}}
+                                    <strong>Precio Final:</strong> Bs. {{number_format($historial_membresia->precio_final, 2)}}
                                 </div>
                             </div>
                         </div>
@@ -136,10 +135,10 @@
                         <div class="alert alert-light">
                             <small>
                                 <strong><i class="fas fa-calendar"></i> Registrado:</strong> 
-                                {{$historialMembresia->created_at->format('d/m/Y H:i')}}
+                                {{$historial_membresia->created_at->format('d/m/Y H:i')}}
                                 <br>
                                 <strong><i class="fas fa-clock"></i> Última actualización:</strong> 
-                                {{$historialMembresia->updated_at->format('d/m/Y H:i')}}
+                                {{$historial_membresia->updated_at->format('d/m/Y H:i')}}
                             </small>
                         </div>
                     </div>
