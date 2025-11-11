@@ -68,7 +68,11 @@ class Cliente extends Model
         return $this->hasMany(HistorialMembresia::class);
     }
 
-   
+    // para las rutinas
+    public function rutinas()
+    {
+        return $this->hasMany(Rutina::class);
+    }
 
 
     /**
@@ -117,5 +121,12 @@ class Cliente extends Model
         return $this->hasOne(Asistencia::class)
             ->whereDate('fecha', today())
             ->latest();
+    }
+
+    public function actividades()
+    {
+        return $this->belongsToMany(ActividadHorario::class, 'actividad_cliente' , 'cliente_id', 'actividad_horario_id')
+            ->with('actividad', 'instructor', 'sala')
+            ->withTimestamps();
     }
 }

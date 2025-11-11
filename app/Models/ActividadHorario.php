@@ -43,6 +43,12 @@ class ActividadHorario extends Model
         return $this->belongsTo(Sala::class, 'sala_id');
     }
 
+    /// Relación muchos a muchos con clientes para panel cliente es
+    public function clientes()
+    {
+        return $this->belongsToMany(Cliente::class, 'actividad_cliente', 'actividad_horario_id', 'cliente_id')
+            ->withTimestamps();
+    }
 
     ///////////
     /**

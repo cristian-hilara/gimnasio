@@ -46,11 +46,16 @@ class Instructor extends Model
     }
 
     //actidades
- 
+
 
     public function horarios()
     {
         return $this->hasMany(ActividadHorario::class, 'instructor_id', 'id');
     }
-    
+
+    //para las rutinas papu
+    public function rutinas()
+    {
+        return $this->hasMany(Rutina::class);
+    }
 }

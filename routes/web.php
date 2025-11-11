@@ -9,12 +9,17 @@ use App\Http\Controllers\Auth\loginController;
 use App\Http\Controllers\Auth\homeController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\ClienteChatController;
 use App\Http\Controllers\UsuarioController;
 
 use App\Models\Administrador;
 use App\Http\Controllers\RecepcionistaController;
 use App\Http\Controllers\InstructorController;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\ClienteNotificacionController;
+use App\Http\Controllers\ClientePanelController;
+use App\Http\Controllers\ClientePerfilController;
+use App\Http\Controllers\EjercicioController;
 use App\Http\Controllers\HistorialMembresiaController;
 use App\Http\Controllers\InscripcionController;
 use App\Http\Controllers\MembresiaController;
@@ -23,6 +28,7 @@ use App\Http\Controllers\PromocionController;
 use App\Http\Controllers\PromocionMembresiaController;
 use App\Http\Controllers\RedirectController;
 use App\Http\Controllers\roleController;
+use App\Http\Controllers\RutinaController;
 use App\Http\Controllers\TipoActividadHorarioController;
 
 /*
@@ -172,6 +178,68 @@ Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
 Route::post('/chat/send', [ChatController::class, 'send'])->name('chat.send.gemini'); // solo Gemini
 
 Route::post('/chat', [ChatController::class, 'responder'])->name('chat.send'); // con lógica interna + Gemini
+
+
+//perfil del cliente
+Route::middleware(['auth'])->group(function () {
+
+    Route::get('/cliente/panel', [ClientePanelController::class, 'index'])->name('cliente.panel');
+    Route::get('/cliente/actividades', [ClientePanelController::class, 'actividades'])->name('cliente.actividades');
+    Route::get('/cliente/membresia', [ClientePanelController::class, 'membresia'])->name('cliente.membresia');
+
+
+    Route::get('/perfil', [ClientePerfilController::class, 'show'])->name('cliente.perfil');
+    Route::get('/perfil/editar', [ClientePerfilController::class, 'edit'])->name('cliente.perfil.edit');
+    Route::post('/perfil/editar', [ClientePerfilController::class, 'update'])->name('cliente.perfil.update');
+
+
+    Route::get('/rutinas', [RutinaController::class, 'index'])->name('cliente.rutinas.index');
+    Route::get('/rutinas/create', [RutinaController::class, 'create'])->name('cliente.rutinas.create');
+    Route::post('/rutinas', [RutinaController::class, 'store'])->name('cliente.rutinas.store');
+    Route::get('/rutinas/{id}', [RutinaController::class, 'show'])->name('cliente.rutinas.show');
+    Route::get('/rutinas/{id}/edit', [RutinaController::class, 'edit'])->name('cliente.rutinas.edit');
+    Route::put('/rutinas/{id}', [RutinaController::class, 'update'])->name('cliente.rutinas.update');
+    Route::delete('/rutinas/{id}', [RutinaController::class, 'destroy'])->name('cliente.rutinas.destroy');
+
+    //chatbot clinente
+    Route::get('/cliente/chat', [ClienteChatController::class, 'index'])->name('cliente.chat');
+    Route::post('/cliente/chat/responder', [ClienteChatController::class, 'responder'])->name('cliente.chat.responder');
+    //notificaciones cliente
+    Route::get('/cliente/notificaciones', [ClienteNotificacionController::class, 'obtener'])->name('cliente.notificaciones');
+});
+
+
+
+
+//rutinas
+Route::middleware(['auth', 'role:ADMINISTRADOR|INSTRUCTOR|RECEPCIONISTA'])->prefix('admin')->group(function () {
+    Route::get('/clientes/{cliente}/rutinas', [RutinaController::class, 'indexAdmin'])->name('admin.clientes.rutinas.index');
+    Route::get('/clientes/{cliente}/rutinas/create', [RutinaController::class, 'createAdmin'])->name('admin.clientes.rutinas.create');
+    Route::post('/clientes/{cliente}/rutinas', [RutinaController::class, 'storeAdmin'])->name('admin.clientes.rutinas.store');
+});
+
+
+Route::middleware(['auth', 'role:ADMINISTRADOR|INSTRUCTOR|RECEPCIONISTA'])->group(function () {
+    Route::resource('ejercicios', EjercicioController::class);
+});
+// Rutas de rutinas para clientes
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

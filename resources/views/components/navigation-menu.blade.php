@@ -129,7 +129,11 @@
                     Chat con Gemini AI
                 </a>
 
-
+                
+                <a class="nav-link" href="{{route('ejercicios.index')}}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-dumbbell"></i></div>
+                    Rutinas-Ejercicios
+                </a>
 
 
             </div>

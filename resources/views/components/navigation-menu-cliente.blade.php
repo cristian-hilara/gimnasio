@@ -10,12 +10,12 @@
                 </a>
 
                 <div class="sb-sidenav-menu-heading">Mi Cuenta</div>
-                <a class="nav-link" href="#">
+                <a class="nav-link" href="{{route('cliente.perfil')}}">
                     <div class="sb-nav-link-icon"><i class="fas fa-user"></i></div>
                     Perfil
                 </a>
 
-                <a class="nav-link" href="#">
+                <a class="nav-link" href="{{route('cliente.rutinas.index')}}">
                     <div class="sb-nav-link-icon"><i class="fas fa-dumbbell"></i></div>
                     Mis Rutinas
                 </a>
@@ -28,6 +28,11 @@
                 <a class="nav-link" href="#">
                     <div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>
                     Actividades
+                </a>
+
+                <a class="nav-link" href="{{ route('cliente.chat') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-comments"></i></div>
+                    Chatbtot Personal
                 </a>
 
                 <div class="sb-sidenav-menu-heading">Soporte</div>

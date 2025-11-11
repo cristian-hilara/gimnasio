@@ -27,7 +27,7 @@
             <i class="fas fa-edit"></i> Actualizar Información del Cliente
         </div>
         <div class="card-body">
-            <form action="{{route('clientes.update', $cliente->id)}}" method="POST">
+            <form action="{{route('clientes.update')}}" method="POST">
                 @csrf
                 @method('PUT')
 
