@@ -28,7 +28,7 @@ class ClienteController extends Controller
                 ->with('warning', 'Tu perfil de cliente aún no está registrado.');
         }
 
-        return view('panel.panel_cliente', compact('cliente'));
+        return redirect()->action([ClientePanelController::class, 'index']);
     }
 
     /**

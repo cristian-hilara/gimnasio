@@ -3,12 +3,15 @@
 use App\Http\Controllers\ActividadController;
 use App\Http\Controllers\AdministradorController;
 use App\Http\Controllers\AsistenciaController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\loginController;
 
 use App\Http\Controllers\Auth\homeController;
 use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\ClienteActividadController;
 use App\Http\Controllers\ClienteChatController;
 use App\Http\Controllers\UsuarioController;
 
@@ -41,14 +44,33 @@ use App\Http\Controllers\TipoActividadHorarioController;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+// Página de inicio
+Route::get('/', [homeController::class, 'index'])->name('home');
 
 // Redirección inteligente
-Route::get('/', [RedirectController::class, 'index'])->name('redirect')->middleware('auth');
+Route::get('/log', [RedirectController::class, 'index'])->name('redirect')->middleware('auth');
 
 // Autenticación
 Route::get('/login', [loginController::class, 'index'])->name('login');
 Route::post('/login', [loginController::class, 'login']);
 Route::get('/logout', [LogoutController::class, 'logout'])->name('logout');
+
+// Cambio de contraseña obligatorio
+// Cambio obligatorio de contraseña
+Route::middleware(['auth'])->group(function () {
+    Route::get('/password/change', [\App\Http\Controllers\Auth\PasswordController::class, 'showChangeForm'])
+        ->name('password.change.form');
+    Route::post('/password/change', [\App\Http\Controllers\Auth\PasswordController::class, 'update'])
+        ->name('password.change.update');
+});
+// Recuperación de contraseña
+Route::get('/password/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+
+Route::post('/password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+
+Route::get('/password/reset/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+
+Route::post('/password/reset', [ResetPasswordController::class, 'reset'])->name('password.update');
 
 // Panel compartido para ADMINISTRADOR y RECEPCIONISTA
 Route::get('/dashboard', function () {
@@ -188,9 +210,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cliente/membresia', [ClientePanelController::class, 'membresia'])->name('cliente.membresia');
 
 
+
     Route::get('/perfil', [ClientePerfilController::class, 'show'])->name('cliente.perfil');
     Route::get('/perfil/editar', [ClientePerfilController::class, 'edit'])->name('cliente.perfil.edit');
     Route::post('/perfil/editar', [ClientePerfilController::class, 'update'])->name('cliente.perfil.update');
+    Route::get('actividad/clientes', [ClienteActividadController::class, 'index'])->name('cliente.actividad.horarios');
 
 
     Route::get('/rutinas', [RutinaController::class, 'index'])->name('cliente.rutinas.index');

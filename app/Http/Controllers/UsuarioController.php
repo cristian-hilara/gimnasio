@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreUsuarioRequest;
 use App\Http\Requests\UpdateUsuarioRequest;
+use App\Mail\UsuarioRegistradoMail;
 use App\Models\Usuario;
 use Auth;
 use Exception;
@@ -12,7 +13,9 @@ use Illuminate\Support\Arr;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use PhpParser\Node\Stmt\TryCatch;
+use Str;
 
 class UsuarioController extends Controller
 {
@@ -56,27 +59,34 @@ class UsuarioController extends Controller
     public function store(StoreUsuarioRequest $request)
     {
         try {
-            DB::beginTransaction();
+        DB::beginTransaction();
 
-            $request->merge([
-                'password' => Hash::make($request->password),
-                'fecha_registro' => now(),
-            ]);
+        // Generar contraseña temporal aleatoria
+        $passwordTemporal = Str::random(10);
 
-            $user = Usuario::create($request->all());
+        $request->merge([
+            'password' => Hash::make($passwordTemporal),
+            'fecha_registro' => now(),
+            'requiere_cambio_contrasena' => true,
+        ]);
 
-            if ($request->hasFile('foto')) {
-                $user->guardarFoto($request->file('foto'));
-            }
+        $user = Usuario::create($request->all());
 
-            $user->assignRole($request->rol);
-
-            DB::commit();
-            return redirect()->route('usuarios.index')->with('success', 'Usuario Registrado');
-        } catch (Exception $e) {
-            DB::rollBack();
-            return redirect()->route('usuarios.index')->with('error', 'Error al registrar: ' . $e->getMessage());
+        if ($request->hasFile('foto')) {
+            $user->guardarFoto($request->file('foto'));
         }
+
+        $user->assignRole($request->rol);
+
+        // Enviar correo con credenciales temporales
+        Mail::to($user->email)->send(new UsuarioRegistradoMail($user, $passwordTemporal));
+
+        DB::commit();
+        return redirect()->route('usuarios.index')->with('success', 'Usuario registrado y credenciales enviadas.');
+    } catch (Exception $e) {
+        DB::rollBack();
+        return redirect()->route('usuarios.index')->with('error', 'Error al registrar: ' . $e->getMessage());
+    }
     }
 
 
@@ -129,6 +139,7 @@ class UsuarioController extends Controller
             // Comprobar el password y aplicar hash
             if (!empty($data['password'])) {
                 $data['password'] = Hash::make($data['password']);
+                $data['requiere_cambio_contrasena'] = true; // obliga a cambiarla en el próximo login
             } else {
                 unset($data['password']);
             }
@@ -179,7 +190,7 @@ class UsuarioController extends Controller
 
         if ($estaVinculado) {
             return redirect()->route('usuarios.index')
-                ->with('error', 'Este usuario está vinculado a otro módulo y no puede ser eliminado.');
+                ->with('error', 'Este usuario está vinculado como cliente, instructor, recepcionista o administrador y no puede ser eliminado.');
         }
 
         // Restricción para recepcionistas

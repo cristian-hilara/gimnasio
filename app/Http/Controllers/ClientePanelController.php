@@ -2,18 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActividadHorario;
 use Auth;
 use Illuminate\Http\Request;
 
 class ClientePanelController extends Controller
 {
-    public function index()
+   public function index()
     {
         $cliente = Auth::user()->cliente;
 
-        // Todas las actividades disponibles (no filtradas por cliente)
-        $actividades = \App\Models\ActividadHorario::with(['actividad', 'instructor.usuario', 'sala'])
-            ->where('estado', true) // solo actividades activas
+        if (!$cliente) {
+            return redirect()->route('errors.cliente_no_registrado')
+                ->with('warning', 'Tu perfil de cliente aún no está registrado.');
+        }
+
+        // Actividades disponibles
+        $actividades = ActividadHorario::with(['actividad', 'instructor.usuario', 'sala'])
+            ->where('estado', true)
             ->orderBy('dia_semana')
             ->orderBy('hora_inicio')
             ->get();
@@ -25,6 +31,6 @@ class ClientePanelController extends Controller
         $rutinaActiva = $cliente->rutinas()->where('estado', 'activa')->with('ejercicios')->first();
         $rutinasAnteriores = $cliente->rutinas()->where('estado', 'inactiva')->get();
 
-        return view('panel.panel_cliente', compact('actividades', 'membresia', 'rutinaActiva', 'rutinasAnteriores'));
+        return view('panel.panel_cliente', compact('cliente', 'actividades', 'membresia', 'rutinaActiva', 'rutinasAnteriores'));
     }
 }

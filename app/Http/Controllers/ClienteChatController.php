@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\ActividadHorario;
 use App\Models\ChatHistorial;
+use App\Models\Ejercicio;
+use App\Models\Objetivo;
 use App\Services\GeminiService;
 use Auth;
 use Http;
@@ -19,10 +21,18 @@ class ClienteChatController extends Controller
         $this->gemini = $gemini;
     }
 
+
     public function index()
     {
-        return view('chatbot.chatcliente');
+        $cliente = Auth::user()->cliente;
+
+        $historial = ChatHistorial::where('cliente_id', $cliente->id)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return view('chatbot.chatcliente', compact('historial'));
     }
+
 
     public function responder(Request $request)
     {
@@ -50,6 +60,31 @@ class ClienteChatController extends Controller
         $rutinaActiva = $cliente->rutinas()->where('estado', 'activa')->first();
         $nombreRutina = $rutinaActiva ? $rutinaActiva->nombre : 'ninguna';
 
+        // --- Detectar si el cliente menciona un objetivo y guardarlo ---
+        $msgLower = strtolower($mensaje);
+        if (str_contains($msgLower, 'bajar de peso')) {
+            $objetivo = Objetivo::where('nombre', 'Bajar de peso')->first();
+            if ($objetivo) {
+                $cliente->objetivo_id = $objetivo->id;
+                $cliente->save();
+            }
+        } elseif (str_contains($msgLower, 'tonificar')) {
+            $objetivo = Objetivo::where('nombre', 'Tonificar')->first();
+            if ($objetivo) {
+                $cliente->objetivo_id = $objetivo->id;
+                $cliente->save();
+            }
+        } elseif (str_contains($msgLower, 'ganar masa')) {
+            $objetivo = Objetivo::where('nombre', 'Ganar masa')->first();
+            if ($objetivo) {
+                $cliente->objetivo_id = $objetivo->id;
+                $cliente->save();
+            }
+        }
+
+        // Objetivo del cliente (ya actualizado si lo mencionó)
+        $objetivo = $cliente->objetivo ? $cliente->objetivo->nombre : 'no definido';
+
         // Actividades disponibles
         $actividades = ActividadHorario::with(['actividad', 'instructor.usuario', 'sala'])
             ->where('estado', true)
@@ -71,6 +106,19 @@ class ClienteChatController extends Controller
             return "{$actividad} ({$dia} {$hora}) - Instructor: {$instructor}, Sala: {$sala}";
         })->implode("\n");
 
+        // Filtrar ejercicios según lo que el cliente pida
+        $ejercicios = [];
+        if (str_contains($msgLower, 'pierna') || str_contains($msgLower, 'glúteo')) {
+            $ejercicios = Ejercicio::whereIn('grupo_muscular', ['Piernas', 'Glúteo'])->get();
+        } elseif (str_contains($msgLower, 'espalda')) {
+            $ejercicios = Ejercicio::where('grupo_muscular', 'Espalda')->get();
+        } elseif (str_contains($msgLower, 'pecho')) {
+            $ejercicios = Ejercicio::where('grupo_muscular', 'Pecho')->get();
+        } elseif (str_contains($msgLower, 'brazos')) {
+            $ejercicios = Ejercicio::where('grupo_muscular', 'Brazos')->get();
+        }
+
+        $listaEjercicios = $ejercicios ? $ejercicios->pluck('nombre')->implode(", ") : "Sin ejercicios sugeridos";
 
         // Historial reciente (últimos 5 mensajes)
         $historialTexto = ChatHistorial::where('cliente_id', $cliente->id)
@@ -82,8 +130,11 @@ class ClienteChatController extends Controller
 
         // Prompt motivacional con datos completos
         $prompt = "
-Eres un asistente personal de gimnasio para clientes.
-Tu rol es responder preguntas sobre actividades, horarios, rutinas y estado de membresía.
+Eres un asistente fitness personal digital para clientes del gimnasio.
+Tu rol es:
+- Recomendar rutinas según el objetivo del cliente (bajar de peso, tonificar, ganar masa).
+- Sugerir ejercicios según el grupo muscular que quiera trabajar.
+- Responder preguntas sobre actividades, horarios, rutinas y estado de membresía.
 Además, debes actuar como un entrenador motivacional: anima al cliente, celebra sus logros y ofrece consejos prácticos de salud y entrenamiento.
 Usa un tono positivo, cercano y motivador, como un coach que quiere que el cliente se supere.
 Responde de forma breve, clara y útil, evitando tecnicismos innecesarios.
@@ -93,6 +144,7 @@ Cada mensaje debe ser breve, claro y motivador.
 
 Datos del cliente:
 - Nombre: {$nombreCompleto}
+- Objetivo: {$objetivo}
 - Teléfono: {$telefono}
 - Foto: {$foto}
 - Peso: {$peso} kg
@@ -101,6 +153,7 @@ Datos del cliente:
 - Membresía: {$estadoMembresia}
 - Rutina activa: {$nombreRutina}
 - Actividades disponibles: {$listaActividades}
+- Ejercicios sugeridos: {$listaEjercicios}
 
 Historial reciente:
 {$historialTexto}

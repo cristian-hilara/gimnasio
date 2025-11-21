@@ -125,8 +125,13 @@ class Cliente extends Model
 
     public function actividades()
     {
-        return $this->belongsToMany(ActividadHorario::class, 'actividad_cliente' , 'cliente_id', 'actividad_horario_id')
+        return $this->belongsToMany(ActividadHorario::class, 'actividad_cliente', 'cliente_id', 'actividad_horario_id')
             ->with('actividad', 'instructor', 'sala')
             ->withTimestamps();
+    }
+
+    public function objetivo()
+    {
+        return $this->belongsTo(Objetivo::class);
     }
 }

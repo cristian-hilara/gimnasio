@@ -25,7 +25,7 @@
                     Mi Progreso
                 </a>
 
-                <a class="nav-link" href="#">
+                <a class="nav-link" href="{{route('cliente.actividad.horarios')}}">
                     <div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>
                     Actividades
                 </a>

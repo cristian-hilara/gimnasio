@@ -127,7 +127,7 @@
         <div class="col-12">
             <div class="card shadow-sm border-0" style="background: linear-gradient(135deg, #3703f4ff 0%, #3703f4ff 100%);">
                 <div class="card-body text-white p-4">
-                    <h2 class="mb-1">👋 Bienvenido, {{ Auth::user()->nombre }}</h2>
+                    <h2 class="mb-1"> Bienvenido, {{ Auth::user()->nombre }} {{ Auth::user()->apellido }}</h2>
                     <p class="mb-0 opacity-75">{{ now()->format('l, d \d\e F \d\e Y') }}</p>
                 </div>
             </div>
@@ -456,7 +456,7 @@
     position: fixed;
     bottom: 30px;
     right: 30px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #e81b04ff 0%, #e81b04ff 100%);
     color: white;
     padding: 1.2rem;
     border-radius: 16px;

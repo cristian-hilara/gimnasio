@@ -21,6 +21,11 @@ class loginController extends Controller
     {
         if (Auth::attempt($request->only('email', 'password'))) {
             $user = Auth::user();
+            //Verificar si requiere cambio de contraseña
+            if ($user->requiere_cambio_contrasena) {
+                return redirect()->route('password.change.form')
+                    ->with('warning', 'Debes cambiar tu contraseña antes de continuar.');
+            }
 
             if ($user->hasRole('ADMINISTRADOR') || $user->hasRole('RECEPCIONISTA')) {
                 return redirect()->route('dashboard')->with('success', '¡Bienvenido ' . $user->nombre . '!');
